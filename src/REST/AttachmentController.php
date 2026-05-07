@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace PaidAttachments\REST;
 
 use PaidAttachments\Database\AttachmentConfigRepository;
+use PaidAttachments\Database\StatsRepository;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
@@ -32,12 +33,21 @@ final class AttachmentController extends RestController {
 	private AttachmentConfigRepository $config_repo;
 
 	/**
+	 * Repository statistiche aggregate.
+	 *
+	 * @var StatsRepository
+	 */
+	private StatsRepository $stats_repo;
+
+	/**
 	 * Costruttore.
 	 *
 	 * @param AttachmentConfigRepository $config_repo Repository configurazioni.
+	 * @param StatsRepository            $stats_repo  Repository statistiche.
 	 */
-	public function __construct( AttachmentConfigRepository $config_repo ) {
+	public function __construct( AttachmentConfigRepository $config_repo, StatsRepository $stats_repo ) {
 		$this->config_repo = $config_repo;
+		$this->stats_repo  = $stats_repo;
 	}
 
 	/**
@@ -162,7 +172,24 @@ final class AttachmentController extends RestController {
 				'link'      => get_attachment_link( $post->ID ),
 				'protected' => $enabled,
 				'config'    => $config ? $this->config_to_array( $config ) : null,
+				'stats'     => null,
 			);
+		}
+
+		// Aggiunge stats per soli attachment protetti in un'unica query batch.
+		$protected_ids = array_column(
+			array_filter( $items, static fn ( array $i ) => $i['protected'] ),
+			'id'
+		);
+
+		if ( ! empty( $protected_ids ) ) {
+			$stats_map = $this->stats_repo->get_per_attachment_stats( $protected_ids );
+			foreach ( $items as &$item ) {
+				if ( $item['protected'] && isset( $stats_map[ $item['id'] ] ) ) {
+					$item['stats'] = $stats_map[ $item['id'] ];
+				}
+			}
+			unset( $item );
 		}
 
 		$response = $this->success( $items );

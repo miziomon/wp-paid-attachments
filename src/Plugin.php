@@ -81,9 +81,10 @@ final class Plugin {
 		( new AttachmentPageRenderer( $config_repo ) )->register();
 
 		// REST API.
+		$stats_repo = new StatsRepository( $GLOBALS['wpdb'] );
 		( new AdminController() )->register();
-		( new AttachmentController( $config_repo ) )->register();
-		( new StatsController( new StatsRepository( $GLOBALS['wpdb'] ) ) )->register();
+		( new AttachmentController( $config_repo, $stats_repo ) )->register();
+		( new StatsController( $stats_repo ) )->register();
 		$code_repo    = new UnlockCodeRepository( $GLOBALS['wpdb'] );
 		$payment_repo = new PaymentRepository( $GLOBALS['wpdb'] );
 		$email_sender = new EmailSender( $code_repo, new TemplateRenderer() );

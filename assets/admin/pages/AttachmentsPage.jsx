@@ -100,6 +100,9 @@ export default function AttachmentsPage() {
 							<th>{ 'Anteprima' }</th>
 							<th>{ 'Nome file' }</th>
 							<th>{ 'Protezione' }</th>
+							<th style={ { textAlign: 'center' } }>{ 'Views' }</th>
+							<th style={ { textAlign: 'center' } }>{ 'Donazioni' }</th>
+							<th style={ { textAlign: 'center' } }>{ 'Free views' }</th>
 							<th>{ 'Data' }</th>
 							<th>{ 'Azioni' }</th>
 						</tr>

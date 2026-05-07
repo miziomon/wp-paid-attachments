@@ -28,6 +28,15 @@ export default function AttachmentRow( { item, onEdit } ) {
 					<span className="wppa-badge wppa-badge--free">{ 'Non protetto' }</span>
 				) }
 			</td>
+			<td className="wppa-attachment-row__stat" style={ { textAlign: 'center' } }>
+				{ item.protected && item.stats ? item.stats.total_views : '—' }
+			</td>
+			<td className="wppa-attachment-row__stat" style={ { textAlign: 'center' } }>
+				{ item.protected && item.stats ? item.stats.donations : '—' }
+			</td>
+			<td className="wppa-attachment-row__stat" style={ { textAlign: 'center' } }>
+				{ item.protected && item.stats ? item.stats.free_views : '—' }
+			</td>
 			<td className="wppa-attachment-row__date">
 				{ new Date( item.date ).toLocaleDateString( 'it-IT' ) }
 			</td>

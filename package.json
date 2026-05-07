@@ -7,6 +7,7 @@
   "author": "Mavida snc <https://mavida.it>",
   "scripts": {
     "build": "wp-scripts build",
+    "build:zip": "wp-scripts build && node scripts/build-zip.js",
     "start": "wp-scripts start",
     "format": "wp-scripts format",
     "lint:js": "wp-scripts lint-js",
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "@wordpress/env": "^10.0.0",
-    "@wordpress/scripts": "^30.0.0"
+    "@wordpress/scripts": "^30.0.0",
+    "archiver": "^7.0.1"
   }
 }

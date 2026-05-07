@@ -5,6 +5,19 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 Il formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-05-07
+
+### Added
+
+- Lista attachment admin: 3 nuove colonne "Views", "Donazioni", "Free views" visibili solo per gli attachment protetti (query batch per-ID, nessuna query aggiuntiva per i non protetti)
+- Comando `npm run build:zip`: compila JS e genera `zip/wp-paid-attachments-{version}.zip` pronto per l'upload su un sito WordPress
+- Dipendenza `archiver` (devDependency) per la creazione del pacchetto ZIP
+- Script `scripts/build-zip.js` che include `src/`, `build/`, `vendor/`, `languages/`, `templates/` + file PHP root
+
+### Changed
+
+- Cartella `zip/` aggiunta a `.gitignore` (artifact di build, non versionato)
+
 ## [0.2.0] — 2026-05-07
 
 ### Added
@@ -60,5 +73,6 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 - Capability check su tutti gli endpoint admin
 - `noindex` su attachment protetti e response endpoint file
 
+[0.3.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/miziomon/wp-paid-attachments/releases/tag/v0.1.0

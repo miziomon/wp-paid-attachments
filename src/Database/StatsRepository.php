@@ -61,6 +61,71 @@ final class StatsRepository {
 	}
 
 	/**
+	 * Restituisce statistiche per un elenco di attachment ID.
+	 *
+	 * Usata dalla lista admin per mostrare views/donazioni/free-views per riga.
+	 * Non usa cache perché i dati servono già filtrati per ID specifici.
+	 *
+	 * @param int[] $ids Lista di attachment ID da interrogare.
+	 * @return array<int, array{donations: int, free_views: int, total_views: int}>
+	 */
+	public function get_per_attachment_stats( array $ids ): array {
+		if ( empty( $ids ) ) {
+			return array();
+		}
+
+		$ids_safe  = array_map( 'intval', $ids );
+		$in_clause = implode( ',', $ids_safe );
+		$pt        = $this->db->prefix . 'wppa_payments';
+		$fv        = $this->db->prefix . 'wppa_free_views';
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$donation_rows = $this->db->get_results(
+			"SELECT attachment_id, COUNT(*) AS donations FROM `{$pt}` WHERE status = 'completed' AND attachment_id IN ({$in_clause}) GROUP BY attachment_id",
+			ARRAY_A
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$freeview_rows = $this->db->get_results(
+			"SELECT attachment_id, COUNT(*) AS free_views FROM `{$fv}` WHERE attachment_id IN ({$in_clause}) GROUP BY attachment_id",
+			ARRAY_A
+		);
+
+		$stats = array();
+		foreach ( $ids_safe as $id ) {
+			$stats[ $id ] = array(
+				'donations'   => 0,
+				'free_views'  => 0,
+				'total_views' => 0,
+			);
+		}
+
+		if ( is_array( $donation_rows ) ) {
+			foreach ( $donation_rows as $row ) {
+				$id = (int) $row['attachment_id'];
+				if ( isset( $stats[ $id ] ) ) {
+					$stats[ $id ]['donations'] = (int) $row['donations'];
+				}
+			}
+		}
+
+		if ( is_array( $freeview_rows ) ) {
+			foreach ( $freeview_rows as $row ) {
+				$id = (int) $row['attachment_id'];
+				if ( isset( $stats[ $id ] ) ) {
+					$stats[ $id ]['free_views'] = (int) $row['free_views'];
+				}
+			}
+		}
+
+		foreach ( $stats as $id => $s ) {
+			$stats[ $id ]['total_views'] = $s['donations'] + $s['free_views'];
+		}
+
+		return $stats;
+	}
+
+	/**
 	 * Invalida la cache per tutti gli intervalli standard.
 	 *
 	 * @return void

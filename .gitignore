@@ -46,6 +46,7 @@ composer.phar
 
 # Plugin packaging
 /wp-paid-attachments.zip
+/zip/
 
 # Test fixtures uploads
 /tests/fixtures/uploads/
