@@ -107,6 +107,19 @@ const TEMPLATE = `
     color: #fff;
   }
 
+  /* Contenitore PayPal Smart Buttons */
+  .paypal-buttons-container { margin-bottom: .75rem; }
+  .donation-msg {
+    color: #1e8228;
+    font-size: .9rem;
+    margin: .5rem 0;
+  }
+  .donation-error {
+    color: #d63638;
+    font-size: .9rem;
+    margin: .5rem 0;
+  }
+
   /* CTA pulsante donazione */
   .btn-donate {
     display: inline-flex;
@@ -218,6 +231,9 @@ const TEMPLATE = `
     <h2 class="body__title"></h2>
     <p class="body__text"></p>
     <div class="amounts"></div>
+    <div class="paypal-buttons-container"></div>
+    <p class="donation-msg" style="display:none"></p>
+    <p class="donation-error" style="display:none"></p>
     <button class="btn-donate" type="button" disabled>Dona per sbloccare</button>
     <div class="divider">oppure</div>
     <button class="link-unlock" type="button">Ho già un codice di sblocco</button>
@@ -267,10 +283,14 @@ class WppaDonationWidget extends HTMLElement {
 		return [
 			'attachment-id',
 			'thumbnail',
-			'title',
+			'paywall-title',
+			'paywall-text',
 			'amounts',
 			'currency',
 			'allow-free-view',
+			'payment-mode',
+			'paypal-client-id',
+			'paypal-donate-button-id',
 			'api-root',
 			'nonce',
 		];
@@ -299,17 +319,21 @@ class WppaDonationWidget extends HTMLElement {
 
 	/* ── Getters attributi ─────────────────────────────── */
 
-	get attachmentId() { return parseInt( this.getAttribute( 'attachment-id' ) || '0', 10 ); }
-	get thumbnail()    { return this.getAttribute( 'thumbnail' ) || ''; }
-	get title()        { return this.getAttribute( 'title' ) || ''; }
-	get amounts()      {
+	get attachmentId()       { return parseInt( this.getAttribute( 'attachment-id' ) || '0', 10 ); }
+	get thumbnail()          { return this.getAttribute( 'thumbnail' ) || ''; }
+	get paywallTitle()       { return this.getAttribute( 'paywall-title' ) || ''; }
+	get paywallText()        { return this.getAttribute( 'paywall-text' ) || ''; }
+	get amounts()            {
 		try { return JSON.parse( this.getAttribute( 'amounts' ) || '[]' ); }
 		catch { return []; }
 	}
-	get currency()      { return this.getAttribute( 'currency' ) || 'EUR'; }
-	get allowFreeView() { return this.getAttribute( 'allow-free-view' ) !== 'false'; }
-	get apiRoot()       { return this.getAttribute( 'api-root' ) || ''; }
-	get nonce()         { return this.getAttribute( 'nonce' ) || ''; }
+	get currency()           { return this.getAttribute( 'currency' ) || 'EUR'; }
+	get allowFreeView()      { return this.getAttribute( 'allow-free-view' ) !== 'false'; }
+	get paymentMode()        { return this.getAttribute( 'payment-mode' ) || 'paypal_smart'; }
+	get paypalClientId()     { return this.getAttribute( 'paypal-client-id' ) || ''; }
+	get paypalDonateButtonId() { return this.getAttribute( 'paypal-donate-button-id' ) || ''; }
+	get apiRoot()            { return this.getAttribute( 'api-root' ) || ''; }
+	get nonce()              { return this.getAttribute( 'nonce' ) || ''; }
 
 	/* ── Render Stato A ────────────────────────────────── */
 
@@ -322,9 +346,8 @@ class WppaDonationWidget extends HTMLElement {
 		img.alt = this.title;
 
 		// Titolo e testo.
-		sr.querySelector( '.body__title' ).textContent = this.title;
-		sr.querySelector( '.state-a .body__text' ).textContent =
-			'Questo contenuto è disponibile dopo una donazione libera.';
+		sr.querySelector( '.body__title' ).textContent = this.paywallTitle;
+		sr.querySelector( '.state-a .body__text' ).textContent = this.paywallText;
 
 		// Pillole importi.
 		const amountsContainer = sr.querySelector( '.amounts' );
@@ -530,13 +553,130 @@ class WppaDonationWidget extends HTMLElement {
 		this._dispatchUnlocked( 'free_view' );
 	}
 
-	/* ── Donazione — implementata in Slice 8/9 ─────────── */
+	/* ── Donazione ──────────────────────────────────────── */
 
 	_startDonation() {
-		this._dispatchCustom( 'wppa:donate-requested', {
-			amount:   this._selectedAmount,
-			currency: this.currency,
+		if ( this.paymentMode === 'paypal_donate' ) {
+			this._redirectPayPalDonate();
+		} else {
+			this._renderSmartButtons();
+		}
+	}
+
+	_redirectPayPalDonate() {
+		const btnId = this.paypalDonateButtonId;
+		if ( ! btnId ) {
+			this._showDonationError( 'Donate Button ID non configurato. Contatta l\'amministratore.' );
+			return;
+		}
+		const amount   = this._selectedAmount || '';
+		const currency = this.currency;
+		const url      = `https://www.paypal.com/donate/?hosted_button_id=${ encodeURIComponent( btnId ) }&amount=${ encodeURIComponent( amount ) }&currency_code=${ encodeURIComponent( currency ) }`;
+		window.location.href = url;
+	}
+
+	async _renderSmartButtons() {
+		const clientId = this.paypalClientId;
+		if ( ! clientId ) {
+			this._showDonationError( 'PayPal Client ID non configurato. Contatta l\'amministratore.' );
+			return;
+		}
+
+		const sr         = this.shadowRoot;
+		const btnDonate  = sr.querySelector( '.state-a .btn-donate' );
+		const container  = sr.querySelector( '.paypal-buttons-container' );
+
+		btnDonate.disabled = true;
+		container.innerHTML = '';
+
+		await this._loadPayPalSdk( clientId );
+
+		if ( ! window.paypal ) {
+			this._showDonationError( 'Impossibile caricare PayPal SDK. Riprova.' );
+			btnDonate.disabled = false;
+			return;
+		}
+
+		const amount   = String( this._selectedAmount || '1.00' );
+		const currency = this.currency;
+		const self     = this;
+
+		window.paypal.Buttons( {
+			style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'donate' },
+
+			createOrder: async () => {
+				const res = await fetch( `${ self.apiRoot }/checkout`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': self.nonce },
+					body: JSON.stringify( {
+						attachment_id: self.attachmentId,
+						amount,
+						currency,
+						provider: 'paypal_smart',
+					} ),
+				} );
+				const data = await res.json();
+				if ( ! res.ok || ! data.order_id ) {
+					throw new Error( data.message || 'Errore creazione ordine.' );
+				}
+				return data.order_id;
+			},
+
+			onApprove: async ( data ) => {
+				const res = await fetch( `${ self.apiRoot }/checkout/capture`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': self.nonce },
+					body: JSON.stringify( {
+						order_id:      data.orderID,
+						attachment_id: self.attachmentId,
+					} ),
+				} );
+				const result = await res.json();
+				if ( ! res.ok ) {
+					self._showDonationError( result.message || 'Pagamento non confermato.' );
+					return;
+				}
+				container.innerHTML = '';
+				self._showDonationMessage( 'Grazie! Controlla la tua email: riceverai a breve il codice di sblocco.' );
+			},
+
+			onError: ( err ) => {
+				self._showDonationError( 'Errore PayPal: ' + ( err.message || err ) );
+				btnDonate.disabled = false;
+			},
+
+			onCancel: () => {
+				btnDonate.disabled = false;
+			},
+		} ).render( container );
+	}
+
+	_loadPayPalSdk( clientId ) {
+		if ( window.paypal ) return Promise.resolve();
+
+		return new Promise( ( resolve, reject ) => {
+			const script   = document.createElement( 'script' );
+			script.src     = `https://www.paypal.com/sdk/js?client-id=${ encodeURIComponent( clientId ) }&currency=${ encodeURIComponent( this.currency ) }&intent=capture&components=buttons`;
+			script.onload  = resolve;
+			script.onerror = () => reject( new Error( 'PayPal SDK load failed' ) );
+			document.head.appendChild( script );
 		} );
+	}
+
+	_showDonationMessage( msg ) {
+		const el = this.shadowRoot.querySelector( '.donation-msg' );
+		el.textContent    = msg;
+		el.style.display  = '';
+		const errEl = this.shadowRoot.querySelector( '.donation-error' );
+		errEl.style.display = 'none';
+	}
+
+	_showDonationError( msg ) {
+		const el = this.shadowRoot.querySelector( '.donation-error' );
+		el.textContent    = msg;
+		el.style.display  = '';
+		const msgEl = this.shadowRoot.querySelector( '.donation-msg' );
+		msgEl.style.display = 'none';
 	}
 
 	/* ── Cookie + Auto-unlock (Slice 10) ────────────────── */

@@ -205,30 +205,58 @@ final class AttachmentPageRenderer {
 		$thumbnail_url = wp_get_attachment_image_url( $attachment_id, 'medium' );
 		$thumbnail_url = $thumbnail_url ? $thumbnail_url : '';
 
-		$title           = esc_attr( $config->custom_text ? $config->custom_text : get_the_title() );
-		$amounts         = wp_json_encode( $config->suggested_amounts );
-		$currency        = esc_attr( $config->currency );
-		$allow_free_view = $config->allow_free_view ? 'true' : 'false';
-		$api_root        = esc_attr( rest_url( 'wppa/v1' ) );
-		$nonce           = esc_attr( wp_create_nonce( 'wp_rest' ) );
+		// Impostazioni globali per titolo/testo paywall e credenziali PayPal.
+		$settings = get_option( 'wppa_settings', array() );
+		$settings = is_array( $settings ) ? $settings : array();
+
+		// Titolo paywall: impostazione globale, altrimenti titolo attachment.
+		$default_title = trim( (string) ( $settings['default_paywall_title'] ?? '' ) );
+		$paywall_title = '' !== $default_title ? $default_title : get_the_title();
+
+		// Testo paywall: override per-attachment, altrimenti impostazione globale.
+		$default_text = trim( (string) ( $settings['default_paywall_text'] ?? '' ) );
+		$paywall_text = '' !== $config->custom_text ? $config->custom_text : $default_text;
+
+		$amounts           = wp_json_encode( $config->suggested_amounts );
+		$currency          = esc_attr( $config->currency );
+		$allow_free_view   = $config->allow_free_view ? 'true' : 'false';
+		$paypal_client_id  = esc_attr( (string) ( $settings['paypal_client_id'] ?? '' ) );
+		$paypal_donate_btn = esc_attr( (string) ( $settings['paypal_donate_button_id'] ?? '' ) );
+
+		// Fallback automatico: se donate mode ma il Button ID manca e il Client ID c'è → smart.
+		$raw_mode = $config->payment_mode;
+		if ( 'paypal_donate' === $raw_mode && '' === $paypal_donate_btn && '' !== $paypal_client_id ) {
+			$raw_mode = 'paypal_smart';
+		}
+		$payment_mode = esc_attr( $raw_mode );
+		$api_root     = esc_attr( rest_url( 'wppa/v1' ) );
+		$nonce        = esc_attr( wp_create_nonce( 'wp_rest' ) );
 
 		return sprintf(
 			'<wppa-donation-widget
 				attachment-id="%d"
 				thumbnail="%s"
-				title="%s"
+				paywall-title="%s"
+				paywall-text="%s"
 				amounts="%s"
 				currency="%s"
 				allow-free-view="%s"
+				payment-mode="%s"
+				paypal-client-id="%s"
+				paypal-donate-button-id="%s"
 				api-root="%s"
 				nonce="%s"
 			></wppa-donation-widget>',
 			$attachment_id,
 			esc_attr( $thumbnail_url ),
-			$title,
+			esc_attr( $paywall_title ),
+			esc_attr( $paywall_text ),
 			esc_attr( $amounts ),
 			$currency,
 			$allow_free_view,
+			$payment_mode,
+			$paypal_client_id,
+			$paypal_donate_btn,
 			$api_root,
 			$nonce
 		);

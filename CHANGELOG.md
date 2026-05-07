@@ -5,6 +5,20 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 Il formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-05-07
+
+### Fixed
+
+- Titolo e testo del paywall non visualizzati nel widget: `render_widget()` ora legge `default_paywall_title` e `default_paywall_text` dalle impostazioni globali e li passa come attributi `paywall-title` e `paywall-text` separati
+- Pulsante "Dona per sbloccare" non funzionante: implementato `_startDonation()` nel Web Component con branch per `paypal_donate` (redirect a PayPal Donate) e `paypal_smart` (lazy-load SDK + Smart Buttons inline)
+- Fallback automatico da `paypal_donate` a `paypal_smart` quando il Donate Button ID non è configurato ma il Client ID è presente, per evitare errori silenziosi
+
+### Added
+
+- Integrazione PayPal Smart Buttons nel widget frontend: selezione importo → click "Dona" → carica SDK PayPal lazy, renderizza Smart Buttons inline, chiama `/checkout` (crea ordine) e `/checkout/capture` (conferma); l'email con il codice parte dal webhook
+- Pulsante "Dona per sbloccare" in modalità `paypal_donate` reindirizza direttamente a `paypal.com/donate/?hosted_button_id=...` con importo e valuta precompilati
+- Messaggi di errore/successo inline nel widget per feedback all'utente dopo la donazione
+
 ## [0.3.0] — 2026-05-07
 
 ### Added
@@ -73,6 +87,7 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 - Capability check su tutti gli endpoint admin
 - `noindex` su attachment protetti e response endpoint file
 
+[0.4.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/miziomon/wp-paid-attachments/releases/tag/v0.1.0
