@@ -1,0 +1,157 @@
+// Stili admin BEM — WP Paid Attachments
+// Variabili CSS custom per theming facilmente sovrascrivibile.
+
+:root {
+	--wppa-color-primary:    #2271b1;
+	--wppa-color-primary-hover: #135e96;
+	--wppa-color-success:    #00a32a;
+	--wppa-color-error:      #d63638;
+	--wppa-color-warning:    #dba617;
+	--wppa-color-text:       #1d2327;
+	--wppa-color-text-muted: #646970;
+	--wppa-color-border:     #c3c4c7;
+	--wppa-color-bg:         #f6f7f7;
+	--wppa-radius:           4px;
+	--wppa-spacing:          16px;
+}
+
+// ─── Pagine ───────────────────────────────────────────────────────────────────
+
+.wppa-settings-page,
+.wppa-attachments-page,
+.wppa-stats-page {
+	max-width: 900px;
+	margin-top: var(--wppa-spacing);
+}
+
+// ─── Form impostazioni ────────────────────────────────────────────────────────
+
+.wppa-settings-form {
+	margin-top: var(--wppa-spacing);
+
+	// PanelRow a larghezza piena per i TextControl larghi.
+	&__wide {
+		width: 100%;
+
+		.components-text-control__input,
+		.components-input-control__input {
+			width: 100%;
+		}
+	}
+
+	&__actions {
+		margin-top: calc(var(--wppa-spacing) * 1.5);
+		padding-top: var(--wppa-spacing);
+		border-top: 1px solid var(--wppa-color-border);
+	}
+}
+
+// ─── Tabs impostazioni ───────────────────────────────────────────────────────
+
+.wppa-settings-tabs {
+	margin-top: var(--wppa-spacing);
+
+	// Override stile tab WP per allinearle correttamente.
+	.components-tab-panel__tabs {
+		border-bottom: 1px solid var(--wppa-color-border);
+		margin-bottom: calc(var(--wppa-spacing) * 1.5);
+	}
+}
+
+.wppa-settings-tab-content {
+	max-width: 640px;
+
+	// Spaziatura tra i controlli.
+	.components-base-control,
+	.components-select-control,
+	.components-toggle-control,
+	.components-text-control,
+	.components-textarea-control,
+	.components-number-control {
+		margin-bottom: calc(var(--wppa-spacing) * 1.25);
+	}
+}
+
+.wppa-settings-sep {
+	border: none;
+	border-top: 1px solid var(--wppa-color-border);
+	margin: calc(var(--wppa-spacing) * 1.5) 0;
+}
+
+.wppa-settings-section-title {
+	margin: 0 0 .5rem;
+}
+
+// ─── Notice ───────────────────────────────────────────────────────────────────
+
+.wppa-settings-page .components-notice {
+	margin: var(--wppa-spacing) 0;
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+
+.wppa-stats-header {
+	display: flex;
+	align-items: center;
+	margin-bottom: calc(var(--wppa-spacing) * 1.5);
+}
+
+.wppa-kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	gap: var(--wppa-spacing);
+	margin-bottom: calc(var(--wppa-spacing) * 2);
+}
+
+.wppa-kpi-card {
+	background: #fff;
+	border: 1px solid var(--wppa-color-border);
+	border-radius: var(--wppa-radius);
+	padding: var(--wppa-spacing);
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+
+	&__value {
+		font-size: 1.75rem;
+		font-weight: 700;
+		color: var(--wppa-color-primary);
+		line-height: 1.1;
+	}
+
+	&__label {
+		font-size: .85rem;
+		color: var(--wppa-color-text);
+		font-weight: 600;
+	}
+
+	&__sub {
+		font-size: .8rem;
+		color: var(--wppa-color-text-muted);
+	}
+}
+
+.wppa-stats-section {
+	margin-bottom: calc(var(--wppa-spacing) * 2);
+
+	h2 {
+		font-size: 1rem;
+		margin: 0 0 var(--wppa-spacing);
+		color: var(--wppa-color-text);
+	}
+}
+
+.wppa-bar-chart {
+	width: 100%;
+	max-width: 560px;
+	display: block;
+}
+
+.wppa-top-table {
+	max-width: 560px;
+}
+
+.wppa-no-data {
+	color: var(--wppa-color-text-muted);
+	font-style: italic;
+}
