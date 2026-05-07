@@ -28,6 +28,7 @@ use PaidAttachments\REST\FreeViewController;
 use PaidAttachments\REST\StatsController;
 use PaidAttachments\REST\UnlockController;
 use PaidAttachments\REST\WebhookController;
+use PaidAttachments\Support\Updater;
 
 /**
  * Bootstrap centrale del plugin.
@@ -68,6 +69,9 @@ final class Plugin {
 	 * @return void
 	 */
 	public function init(): void {
+		// Aggiornamenti automatici da GitHub Releases.
+		Updater::init();
+
 		// Carica le traduzioni del plugin.
 		add_action( 'init', array( $this, 'load_textdomain' ) );
 

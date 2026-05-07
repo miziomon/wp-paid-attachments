@@ -14,7 +14,11 @@
     "lint:css": "wp-scripts lint-style",
     "packages-update": "wp-scripts packages-update",
     "wp-env": "wp-env",
-    "wp-env:cli": "wp-env run cli wp"
+    "wp-env:cli": "wp-env run cli wp",
+    "release": "node scripts/release.js",
+    "release:patch": "node scripts/release.js patch",
+    "release:minor": "node scripts/release.js minor",
+    "release:major": "node scripts/release.js major"
   },
   "devDependencies": {
     "@wordpress/env": "^10.0.0",
