@@ -89,11 +89,15 @@ final class PayPalSmartButtonsProvider implements PaymentProviderInterface {
 			return array( 'error' => $response->get_error_message() );
 		}
 
-		$data     = json_decode( wp_remote_retrieve_body( $response ), true );
-		$order_id = is_array( $data ) ? (string) ( $data['id'] ?? '' ) : '';
+		$http_code = (int) wp_remote_retrieve_response_code( $response );
+		$body      = wp_remote_retrieve_body( $response );
+		$data      = json_decode( $body, true );
+		$order_id  = is_array( $data ) ? (string) ( $data['id'] ?? '' ) : '';
 
 		if ( ! $order_id ) {
-			return array( 'error' => 'PayPal order creation failed.' );
+			$pp_message = is_array( $data ) ? (string) ( $data['message'] ?? ( $data['error_description'] ?? ( $data['error'] ?? '' ) ) ) : '';
+			$error_msg  = $pp_message ? "PayPal [{$http_code}]: {$pp_message}" : "PayPal order creation failed (HTTP {$http_code}).";
+			return array( 'error' => $error_msg );
 		}
 
 		return array( 'payload' => array( 'order_id' => $order_id ) );
@@ -176,11 +180,14 @@ final class PayPalSmartButtonsProvider implements PaymentProviderInterface {
 			return $response;
 		}
 
-		$data  = json_decode( wp_remote_retrieve_body( $response ), true );
-		$token = is_array( $data ) ? (string) ( $data['access_token'] ?? '' ) : '';
+		$token_http = (int) wp_remote_retrieve_response_code( $response );
+		$data       = json_decode( wp_remote_retrieve_body( $response ), true );
+		$token      = is_array( $data ) ? (string) ( $data['access_token'] ?? '' ) : '';
 
 		if ( ! $token ) {
-			return new \WP_Error( 'token_error', 'PayPal token request failed.' );
+			$pp_err = is_array( $data ) ? (string) ( $data['error_description'] ?? ( $data['error'] ?? '' ) ) : '';
+			$msg    = $pp_err ? "PayPal OAuth [{$token_http}]: {$pp_err}" : "PayPal token request failed (HTTP {$token_http}).";
+			return new \WP_Error( 'token_error', $msg );
 		}
 
 		$expires_in = (int) ( is_array( $data ) ? ( $data['expires_in'] ?? 3600 ) : 3600 );

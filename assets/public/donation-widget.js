@@ -597,7 +597,7 @@ class WppaDonationWidget extends HTMLElement {
 			return;
 		}
 
-		const amount   = String( this._selectedAmount || '1.00' );
+		const amount   = parseFloat( this._selectedAmount || 1 );
 		const currency = this.currency;
 		const self     = this;
 

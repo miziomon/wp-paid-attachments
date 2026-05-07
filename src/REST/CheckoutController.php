@@ -111,7 +111,8 @@ final class CheckoutController extends RestController {
 					),
 					'payer_email'   => array(
 						'type'              => 'string',
-						'required'          => true,
+						'required'          => false,
+						'default'           => '',
 						'sanitize_callback' => 'sanitize_email',
 					),
 				),
