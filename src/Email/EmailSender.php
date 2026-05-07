@@ -104,18 +104,41 @@ final class EmailSender {
 			);
 
 		// Template HTML.
-		$custom_template  = WPPA_PLUGIN_DIR . 'templates/email/custom-html.php';
-		$default_template = WPPA_PLUGIN_DIR . 'templates/email/default-html.php';
-		$template         = file_exists( $custom_template ) ? $custom_template : $default_template;
+		$custom_html  = WPPA_PLUGIN_DIR . 'templates/email/custom-html.php';
+		$default_html = WPPA_PLUGIN_DIR . 'templates/email/default-html.php';
+		$html_tpl     = file_exists( $custom_html ) ? $custom_html : $default_html;
+		$html         = $this->renderer->render( $html_tpl, $variables );
 
-		$html = $this->renderer->render( $template, $variables );
+		// Template plain-text (fallback: solo HTML se il file testo non esiste).
+		$custom_text  = WPPA_PLUGIN_DIR . 'templates/email/custom-text.php';
+		$default_text = WPPA_PLUGIN_DIR . 'templates/email/default-text.php';
+		$text_tpl     = file_exists( $custom_text ) ? $custom_text : ( file_exists( $default_text ) ? $default_text : '' );
+		$text         = $text_tpl ? $this->renderer->render( $text_tpl, $variables ) : '';
 
-		$headers = array(
-			'Content-Type: text/html; charset=UTF-8',
-			'From: ' . $this->get_from_header(),
-		);
+		$from    = $this->get_from_header();
+		$headers = array( 'From: ' . $from );
 
-		return wp_mail( $payer_email, $subject, $html, $headers );
+		if ( $text ) {
+			// Multipart: prima plain-text poi HTML (ordine preferito dai client email).
+			$boundary  = 'wppa_' . wp_generate_password( 16, false );
+			$headers[] = 'MIME-Version: 1.0';
+			$headers[] = 'Content-Type: multipart/alternative; boundary="' . $boundary . '"';
+
+			$body = "--{$boundary}\r\n"
+				. "Content-Type: text/plain; charset=UTF-8\r\n"
+				. "Content-Transfer-Encoding: 8bit\r\n\r\n"
+				. $text . "\r\n\r\n"
+				. "--{$boundary}\r\n"
+				. "Content-Type: text/html; charset=UTF-8\r\n"
+				. "Content-Transfer-Encoding: 8bit\r\n\r\n"
+				. $html . "\r\n\r\n"
+				. "--{$boundary}--";
+		} else {
+			$headers[] = 'Content-Type: text/html; charset=UTF-8';
+			$body      = $html;
+		}
+
+		return wp_mail( $payer_email, $subject, $body, $headers );
 	}
 
 	/**
