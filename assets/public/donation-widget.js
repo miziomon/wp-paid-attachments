@@ -602,6 +602,7 @@ class WppaDonationWidget extends HTMLElement {
 		const self     = this;
 
 		window.paypal.Buttons( {
+			fundingSource: window.paypal.FUNDING.PAYPAL,
 			style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'donate' },
 
 			createOrder: async () => {
@@ -656,7 +657,7 @@ class WppaDonationWidget extends HTMLElement {
 
 		return new Promise( ( resolve, reject ) => {
 			const script   = document.createElement( 'script' );
-			script.src     = `https://www.paypal.com/sdk/js?client-id=${ encodeURIComponent( clientId ) }&currency=${ encodeURIComponent( this.currency ) }&intent=capture&components=buttons`;
+			script.src     = `https://www.paypal.com/sdk/js?client-id=${ encodeURIComponent( clientId ) }&currency=${ encodeURIComponent( this.currency ) }&intent=capture&components=buttons&disable-funding=mybank,credit,card,venmo,sepa,bancontact,eps,giropay,ideal,mercadopago,p24,sofort`;
 			script.onload  = resolve;
 			script.onerror = () => reject( new Error( 'PayPal SDK load failed' ) );
 			document.head.appendChild( script );
