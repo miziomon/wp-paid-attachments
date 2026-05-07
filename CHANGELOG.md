@@ -5,6 +5,13 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 Il formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] — 2026-05-07
+
+### Added
+
+- Sistema di aggiornamento automatico da GitHub Releases: `src/Support/Updater.php` usa `yahnis-elsts/plugin-update-checker` v5 — WordPress mostra la notifica di aggiornamento nel pannello plugin quando viene pubblicata una nuova release con ZIP allegato
+- Script di release automatizzato `scripts/release.js` (+ comandi npm `release:patch`, `release:minor`, `release:major`): esegue in sequenza bump versione, build, `composer --no-dev`, generazione ZIP, commit + tag + push git, creazione GitHub Release con ZIP come asset
+
 ## [0.4.0] — 2026-05-07
 
 ### Fixed
@@ -87,6 +94,7 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 - Capability check su tutti gli endpoint admin
 - `noindex` su attachment protetti e response endpoint file
 
+[0.5.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.1.0...v0.2.0
