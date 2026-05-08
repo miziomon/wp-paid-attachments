@@ -1,6 +1,6 @@
 {
   "name": "wp-paid-attachments",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Plugin WordPress per monetizzare attachment tramite donazione PayPal opzionale.",
   "private": true,
   "license": "GPL-2.0-or-later",

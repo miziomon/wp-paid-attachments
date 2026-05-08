@@ -3,7 +3,7 @@
  * Plugin Name:       WP Paid Attachments
  * Plugin URI:        https://github.com/miziomon/wp-paid-attachments
  * Description:       Monetizza singoli attachment (immagini HD) tramite donazione PayPal opzionale con sblocco via codice email.
- * Version:           0.4.0
+ * Version:           0.4.1
  * Requires at least: 6.4
  * Requires PHP:      8.1
  * Author:            Mavida snc
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Costanti del plugin (guard per evitare conflitti con wp-config.php).
 if ( ! defined( 'WPPA_VERSION' ) ) {
-	define( 'WPPA_VERSION', '0.4.0' );
+	define( 'WPPA_VERSION', '0.4.1' );
 }
 if ( ! defined( 'WPPA_PLUGIN_FILE' ) ) {
 	define( 'WPPA_PLUGIN_FILE', __FILE__ );
