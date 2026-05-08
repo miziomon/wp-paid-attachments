@@ -8,6 +8,17 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 > **Nota sulla cronologia delle versioni.**
 > I tag git pubblicati sono `v0.2.0` e `v0.3.0`. La release `v0.2.0` è la prima release pubblica del plugin e raccoglie tutte le iterazioni di sviluppo precedenti, documentate qui sotto come sub-entry `[0.2.0-dev.N]` (storiche, non corrispondono a tag git separati).
 
+## [0.3.1] — 2026-05-08
+
+### Added
+
+- Nuovo setting `paypal_merchant_id` per Conti Personali: campo "Merchant ID PayPal" mostrato solo quando `paypal_account_type = personal`, sostituisce il Donate Button ID (non disponibile per pulsanti non-hosted)
+- `PayPalDonateProvider`: ora costruisce l'URL Donate "non-hosted" per Conti Personali usando i parametri `business`, `item_name`, `amount`, `currency_code`, `no_recurring=1` e `notify_url` (per IPN); per Conti Business resta il flusso `hosted_button_id` invariato
+
+### Changed
+
+- UI Impostazioni → Tab "Integrazione PayPal": il campo "Donate Button ID (Hosted Button)" è ora nascosto quando si seleziona "Conto Personale"; viene mostrato il campo "Merchant ID PayPal" con istruzioni per estrarlo dal markup HTML del pulsante generato da `paypal.com/donate/buttons`
+
 ## [0.3.0] — 2026-05-08
 
 ### Added
@@ -115,5 +126,6 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 - Capability check su tutti gli endpoint admin
 - `noindex` su attachment protetti e response endpoint file
 
+[0.3.1]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/miziomon/wp-paid-attachments/releases/tag/v0.2.0

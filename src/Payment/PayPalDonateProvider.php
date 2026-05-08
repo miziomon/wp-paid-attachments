@@ -52,25 +52,47 @@ final class PayPalDonateProvider implements PaymentProviderInterface {
 	 */
 	public function create_payment( int $attachment_id, float $amount, string $currency, string $return_url, string $cancel_url ): array {
 		$settings     = get_option( 'wppa_settings', array() );
-		$button_id    = (string) ( $settings['paypal_donate_button_id'] ?? '' );
 		$mode         = (string) ( $settings['paypal_mode'] ?? 'sandbox' );
 		$account_type = (string) ( $settings['paypal_account_type'] ?? 'business' );
 
 		$base_url = 'live' === $mode ? self::LIVE_URL : self::SANDBOX_URL;
 
-		$params = array(
-			'hosted_button_id' => $button_id,
-			'currency_code'    => $currency,
-			'amount'           => (string) $amount,
-			'return'           => $return_url . '&wppa_payment=success&wppa_attachment=' . $attachment_id,
-			'cancel_return'    => $cancel_url,
-			'custom'           => (string) $attachment_id,
+		// Parametri di callback comuni a entrambe le modalità.
+		$common = array(
+			'currency_code' => $currency,
+			'amount'        => (string) $amount,
+			'return'        => $return_url . '&wppa_payment=success&wppa_attachment=' . $attachment_id,
+			'cancel_return' => $cancel_url,
+			'custom'        => (string) $attachment_id,
 		);
 
-		// Per Conti Personali (no Webhook v2) usiamo IPN: passiamo il notify_url
-		// nel form Donate in modo che PayPal invii la notifica al nostro endpoint IPN.
 		if ( 'personal' === $account_type ) {
-			$params['notify_url'] = rest_url( 'wppa/v1/ipn/paypal' );
+			// Conto Personale: form Donate "non-hosted" con merchant ID nel campo 'business'.
+			// La conferma del pagamento arriva tramite IPN (notify_url).
+			$merchant_id = (string) ( $settings['paypal_merchant_id'] ?? '' );
+
+			$params = array_merge(
+				array(
+					'business'     => $merchant_id,
+					'item_name'    => sprintf(
+						/* translators: %d: ID dell'attachment. */
+						__( 'Donazione per attachment #%d', 'wp-paid-attachments' ),
+						$attachment_id
+					),
+					'no_recurring' => '1',
+					'notify_url'   => rest_url( 'wppa/v1/ipn/paypal' ),
+				),
+				$common
+			);
+		} else {
+			// Conto Business: Hosted Button (configurazione lato PayPal). La conferma
+			// arriva tramite Webhook v2, non serve notify_url.
+			$button_id = (string) ( $settings['paypal_donate_button_id'] ?? '' );
+
+			$params = array_merge(
+				array( 'hosted_button_id' => $button_id ),
+				$common
+			);
 		}
 
 		return array( 'url' => $base_url . '?' . http_build_query( $params ) );

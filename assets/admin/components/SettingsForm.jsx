@@ -117,28 +117,69 @@ export default function SettingsForm( { settings, onSave, isSaving } ) {
 									</>
 								) }
 
-								<hr className="wppa-settings-sep" />
-								<p className="wppa-settings-section-title">
-									<strong>{ 'PayPal Donate Button (modalità "Donate")' }</strong>
-								</p>
-								<p className="description">
-									{ 'Il pulsante Donate è un pulsante hosted di PayPal: ' }
-									{ 'il donatore viene reindirizzato su paypal.com, completa la donazione, ' }
-									{ 'poi torna al tuo sito. Non richiede Client ID/Secret — usa solo il Hosted Button ID.' }
-									<br />
-									{ 'Per ottenerlo: ' }
-									<ExternalLink href="https://www.paypal.com/donate/buttons/partner">
-										{ 'paypal.com/donate/buttons' }
-									</ExternalLink>
-									{ ' → crea il pulsante → copia l\'ID dalla sezione "Website" del codice embed.' }
-								</p>
-								<TextControl
-									label="Donate Button ID (Hosted Button)"
-									value={ form.paypal_donate_button_id }
-									onChange={ ( v ) => set( 'paypal_donate_button_id', v ) }
-									placeholder="Es: ABC123XYZ"
-									className="wppa-settings-form__wide"
-								/>
+								{ ( form.paypal_account_type || 'business' ) === 'business' && (
+									<>
+										<hr className="wppa-settings-sep" />
+										<p className="wppa-settings-section-title">
+											<strong>{ 'PayPal Donate Button (modalità "Donate")' }</strong>
+										</p>
+										<p className="description">
+											{ 'Il pulsante Donate è un pulsante hosted di PayPal: ' }
+											{ 'il donatore viene reindirizzato su paypal.com, completa la donazione, ' }
+											{ 'poi torna al tuo sito. Non richiede Client ID/Secret — usa solo il Hosted Button ID.' }
+											<br />
+											{ 'Per ottenerlo: ' }
+											<ExternalLink href="https://www.paypal.com/donate/buttons/partner">
+												{ 'paypal.com/donate/buttons' }
+											</ExternalLink>
+											{ ' → crea il pulsante → copia l\'ID dalla sezione "Website" del codice embed.' }
+										</p>
+										<TextControl
+											label="Donate Button ID (Hosted Button)"
+											value={ form.paypal_donate_button_id }
+											onChange={ ( v ) => set( 'paypal_donate_button_id', v ) }
+											placeholder="Es: ABC123XYZ"
+											className="wppa-settings-form__wide"
+										/>
+									</>
+								) }
+
+								{ ( form.paypal_account_type || 'business' ) === 'personal' && (
+									<>
+										<hr className="wppa-settings-sep" />
+										<p className="wppa-settings-section-title">
+											<strong>{ 'Merchant ID PayPal (Conto Personale)' }</strong>
+										</p>
+										<p className="description">
+											{ 'Per i Conti Personali PayPal usiamo il pulsante Donate "non-hosted": serve solo il tuo ' }
+											<strong>{ 'Merchant ID' }</strong>
+											{ ' (anche detto Account ID).' }
+											<br />
+											{ 'Per ottenerlo: ' }
+											<ExternalLink href="https://www.paypal.com/donate/buttons">
+												{ 'paypal.com/donate/buttons' }
+											</ExternalLink>
+											{ ' → crea il pulsante → nel codice HTML che PayPal ti mostra cerca ' }
+											<code>{ '<input name="business" value="XXXXXXXXX" />' }</code>
+											{ '. Il valore in ' }
+											<code>{ 'value' }</code>
+											{ ' è il tuo Merchant ID.' }
+											<br />
+											{ 'Esempio: in ' }
+											<code>{ '<input name="business" value="3224NEH5QZ2S8" />' }</code>
+											{ ' il Merchant ID è ' }
+											<code>{ '3224NEH5QZ2S8' }</code>
+											{ '.' }
+										</p>
+										<TextControl
+											label="Merchant ID PayPal"
+											value={ form.paypal_merchant_id || '' }
+											onChange={ ( v ) => set( 'paypal_merchant_id', v ) }
+											placeholder="Es: 3224NEH5QZ2S8"
+											className="wppa-settings-form__wide"
+										/>
+									</>
+								) }
 
 								{ ( form.paypal_account_type || 'business' ) === 'business' && (
 									<>

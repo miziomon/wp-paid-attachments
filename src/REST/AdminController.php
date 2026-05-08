@@ -109,6 +109,7 @@ final class AdminController extends RestController {
 			'paypal_client_id'           => '',
 			'paypal_client_secret'       => '',
 			'paypal_donate_button_id'    => '',
+			'paypal_merchant_id'         => '',
 			'paypal_webhook_id'          => '',
 			'default_payment_mode'       => 'paypal_donate',
 			'default_currency'           => 'EUR',
@@ -143,6 +144,7 @@ final class AdminController extends RestController {
 			'paypal_client_id'           => sanitize_text_field( $settings['paypal_client_id'] ?? '' ),
 			'paypal_client_secret'       => sanitize_text_field( $settings['paypal_client_secret'] ?? '' ),
 			'paypal_donate_button_id'    => sanitize_text_field( $settings['paypal_donate_button_id'] ?? '' ),
+			'paypal_merchant_id'         => sanitize_text_field( $settings['paypal_merchant_id'] ?? '' ),
 			'paypal_webhook_id'          => sanitize_text_field( $settings['paypal_webhook_id'] ?? '' ),
 			'default_payment_mode'       => in_array( $settings['default_payment_mode'] ?? '', array( 'paypal_donate', 'paypal_smart', 'both' ), true )
 				? $settings['default_payment_mode']
@@ -185,6 +187,7 @@ final class AdminController extends RestController {
 			'paypal_client_id'           => array( 'type' => 'string' ),
 			'paypal_client_secret'       => array( 'type' => 'string' ),
 			'paypal_donate_button_id'    => array( 'type' => 'string' ),
+			'paypal_merchant_id'         => array( 'type' => 'string' ),
 			'paypal_webhook_id'          => array( 'type' => 'string' ),
 			'default_payment_mode'       => array(
 				'type' => 'string',
