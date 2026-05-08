@@ -52,9 +52,9 @@ final class EmailSender {
 	 * @param int              $attachment_id ID attachment WP.
 	 * @param AttachmentConfig $config        Configurazione attachment.
 	 * @param int              $payment_id    ID del pagamento registrato.
-	 * @return bool True se l'email è stata inviata correttamente.
+	 * @return string|null Codice in chiaro generato (da usare per auto-validazione PDT) o null in caso di errore.
 	 */
-	public function send_unlock_email( string $payer_email, int $attachment_id, AttachmentConfig $config, int $payment_id ): bool {
+	public function send_unlock_email( string $payer_email, int $attachment_id, AttachmentConfig $config, int $payment_id ): ?string {
 		// Genera codice di sblocco.
 		$plain_code = $this->generate_plain_code();
 		$hash       = password_hash( $plain_code, PASSWORD_BCRYPT );
@@ -74,7 +74,7 @@ final class EmailSender {
 		);
 
 		if ( ! $code_id ) {
-			return false;
+			return null;
 		}
 
 		// Link auto-validante.
@@ -138,7 +138,9 @@ final class EmailSender {
 			$body      = $html;
 		}
 
-		return wp_mail( $payer_email, $subject, $body, $headers );
+		$sent = wp_mail( $payer_email, $subject, $body, $headers );
+
+		return $sent ? $plain_code : null;
 	}
 
 	/**

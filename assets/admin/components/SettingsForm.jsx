@@ -232,12 +232,61 @@ export default function SettingsForm( { settings, onSave, isSaving } ) {
 									<>
 										<hr className="wppa-settings-sep" />
 										<p className="wppa-settings-section-title">
+											<strong>{ 'PDT Identity Token (conferma immediata al ritorno)' }</strong>
+										</p>
+										<p className="description">
+											{ 'Il PDT (Payment Data Transfer) permette di confermare il pagamento ' }
+											<strong>{ 'subito al ritorno dell\'utente sul sito' }</strong>
+											{ ', mostrando l\'immagine senza attendere l\'IPN. Funziona anche su ambienti localhost (la chiamata di verifica è outbound).' }
+											<ol style={ { margin: '8px 0 8px 1.5rem', padding: 0 } }>
+												<li>
+													{ 'Vai su ' }
+													<ExternalLink href="https://www.paypal.com/businessmanage/preferences/website">
+														{ 'paypal.com → Profilo → Strumenti di vendita' }
+													</ExternalLink>
+													{ '.' }
+												</li>
+												<li>
+													{ 'Cerca ' }
+													<strong>{ 'Trasferimento dati di pagamento (PDT)' }</strong>
+													{ ' → ' }
+													<strong>{ 'Aggiorna' }</strong>
+													{ '.' }
+												</li>
+												<li>
+													{ 'Imposta ' }
+													<strong>{ 'Trasferimento dati di pagamento → ON' }</strong>
+													{ '.' }
+												</li>
+												<li>
+													{ 'URL di ritorno: ' }
+													<code>{ window.location.origin }</code>
+													{ ' (qualsiasi pagina del sito; viene comunque sovrascritta dal plugin per ogni attachment).' }
+												</li>
+												<li>
+													{ 'Salva → PayPal mostrerà l\'' }
+													<strong>{ 'Identity Token' }</strong>
+													{ ' (stringa lunga) → copialo qui sotto.' }
+												</li>
+											</ol>
+										</p>
+										<TextControl
+											label="PDT Identity Token"
+											value={ form.paypal_pdt_token || '' }
+											type="password"
+											onChange={ ( v ) => set( 'paypal_pdt_token', v ) }
+											placeholder="Es: nMpV8iV-Y...JmQRk_uUQg"
+											className="wppa-settings-form__wide"
+										/>
+
+										<hr className="wppa-settings-sep" />
+										<p className="wppa-settings-section-title">
 											<strong>{ 'Configurazione IPN (Conto Personale)' }</strong>
 										</p>
 										<p className="description">
-											{ 'I Conti Personali non hanno accesso a Client ID/Secret né ai Webhook v2. Per ricevere la conferma del pagamento dal server PayPal usiamo il sistema legacy ' }
-											<strong>{ 'IPN (Instant Payment Notification)' }</strong>
-											{ '. Procedura una tantum:' }
+											{ 'L\'IPN è il fallback asincrono: se l\'utente chiude il browser prima di tornare sul sito, il pagamento viene comunque confermato e l\'email inviata. ' }
+											<strong>{ 'Richiede un URL pubblicamente raggiungibile' }</strong>
+											{ ' (in localhost non funziona — usa solo PDT in dev). Procedura una tantum:' }
 											<ol style={ { margin: '8px 0 8px 1.5rem', padding: 0 } }>
 												<li>
 													{ 'Accedi al tuo conto PayPal su ' }

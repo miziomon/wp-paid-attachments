@@ -8,6 +8,20 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 > **Nota sulla cronologia delle versioni.**
 > I tag git pubblicati sono `v0.2.0` e `v0.3.0`. La release `v0.2.0` è la prima release pubblica del plugin e raccoglie tutte le iterazioni di sviluppo precedenti, documentate qui sotto come sub-entry `[0.2.0-dev.N]` (storiche, non corrispondono a tag git separati).
 
+## [0.4.0] — 2026-05-08
+
+### Added
+
+- Supporto **PDT (Payment Data Transfer)** per Conti Personali, complementare all'IPN: nuova classe `PaidAttachments\Payment\PdtVerifier` esegue il round-trip di verifica con `cmd=_notify-synch` su `paypal.com/cgi-bin/webscr` (chiamata outbound, funziona anche da localhost dietro NAT)
+- Nuova classe `PaidAttachments\Frontend\PdtHandler` agganciata a `template_redirect`: intercetta `?wppa_payment=success&tx=...` al ritorno utente da PayPal, verifica la transazione, completa il pagamento (codice + email) e redirige con `?wppa_unlock=<codice>` per auto-validazione immediata
+- Nuovo setting `paypal_pdt_token` (PDT Identity Token) nella tab "Integrazione PayPal" → sezione Conto Personale, con istruzioni step-by-step per attivare PDT su `paypal.com/businessmanage/preferences/website`
+- PDT e IPN coesistono: il primo che arriva crea il pagamento, il secondo trova il record già `completed` e ignora silenziosamente (idempotenza su `provider_transaction_id`). PDT migliora UX (codice subito visibile al ritorno), IPN resta come fallback asincrono se l'utente chiude il browser
+
+### Changed
+
+- `EmailSender::send_unlock_email()`: il return type passa da `bool` a `?string` — ora restituisce il codice in chiaro generato (necessario per la redirect PDT con auto-validazione) o `null` in caso di errore. I caller esistenti (`IpnController`, `WebhookController`) continuano a funzionare grazie alla compatibilità truthy/falsy
+- UI Impostazioni: il testo introduttivo della sezione IPN chiarisce ora che è il fallback asincrono (richiede URL pubblico) e che PDT è la soluzione consigliata per dev locale
+
 ## [0.3.2] — 2026-05-08
 
 ### Fixed
@@ -138,6 +152,7 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 - Capability check su tutti gli endpoint admin
 - `noindex` su attachment protetti e response endpoint file
 
+[0.4.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.2.0...v0.3.0

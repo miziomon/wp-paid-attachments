@@ -14,6 +14,7 @@ use PaidAttachments\Admin\SettingsPage;
 use PaidAttachments\Database\AttachmentConfigRepository;
 use PaidAttachments\Frontend\AssetsLoader;
 use PaidAttachments\Frontend\AttachmentPageRenderer;
+use PaidAttachments\Frontend\PdtHandler;
 use PaidAttachments\Database\PaymentRepository;
 use PaidAttachments\Database\UnlockCodeRepository;
 use PaidAttachments\Email\EmailSender;
@@ -21,6 +22,7 @@ use PaidAttachments\Email\TemplateRenderer;
 use PaidAttachments\Payment\IpnVerifier;
 use PaidAttachments\Payment\PayPalDonateProvider;
 use PaidAttachments\Payment\PayPalSmartButtonsProvider;
+use PaidAttachments\Payment\PdtVerifier;
 use PaidAttachments\Database\StatsRepository;
 use PaidAttachments\REST\AdminController;
 use PaidAttachments\REST\AttachmentController;
@@ -101,6 +103,10 @@ final class Plugin {
 		( new CheckoutController( $config_repo, $payment_repo, new PayPalSmartButtonsProvider() ) )->register();
 		( new WebhookController( $providers, $payment_repo, $config_repo, $email_sender ) )->register();
 		( new IpnController( new IpnVerifier(), $payment_repo, $config_repo, $email_sender ) )->register();
+
+		// Handler PDT: completa il pagamento al ritorno dell'utente da PayPal,
+		// fondamentale quando l'IPN non è raggiungibile (es. localhost dietro NAT).
+		( new PdtHandler( new PdtVerifier(), $payment_repo, $config_repo, $email_sender ) )->register();
 	}
 
 	/**
