@@ -51,9 +51,10 @@ final class PayPalDonateProvider implements PaymentProviderInterface {
 	 * @return array{url: string}
 	 */
 	public function create_payment( int $attachment_id, float $amount, string $currency, string $return_url, string $cancel_url ): array {
-		$settings  = get_option( 'wppa_settings', array() );
-		$button_id = (string) ( $settings['paypal_donate_button_id'] ?? '' );
-		$mode      = (string) ( $settings['paypal_mode'] ?? 'sandbox' );
+		$settings     = get_option( 'wppa_settings', array() );
+		$button_id    = (string) ( $settings['paypal_donate_button_id'] ?? '' );
+		$mode         = (string) ( $settings['paypal_mode'] ?? 'sandbox' );
+		$account_type = (string) ( $settings['paypal_account_type'] ?? 'business' );
 
 		$base_url = 'live' === $mode ? self::LIVE_URL : self::SANDBOX_URL;
 
@@ -65,6 +66,12 @@ final class PayPalDonateProvider implements PaymentProviderInterface {
 			'cancel_return'    => $cancel_url,
 			'custom'           => (string) $attachment_id,
 		);
+
+		// Per Conti Personali (no Webhook v2) usiamo IPN: passiamo il notify_url
+		// nel form Donate in modo che PayPal invii la notifica al nostro endpoint IPN.
+		if ( 'personal' === $account_type ) {
+			$params['notify_url'] = rest_url( 'wppa/v1/ipn/paypal' );
+		}
 
 		return array( 'url' => $base_url . '?' . http_build_query( $params ) );
 	}

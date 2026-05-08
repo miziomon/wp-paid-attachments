@@ -5,6 +5,20 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 Il formato segue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-05-08
+
+### Added
+
+- Supporto **Conti Personali PayPal** tramite IPN (Instant Payment Notification): nuova classe `PaidAttachments\Payment\IpnVerifier` esegue il round-trip di verifica su `ipnpb.paypal.com` con `cmd=_notify-validate`
+- Nuovo endpoint REST `POST /wppa/v1/ipn/paypal` (`IpnController`) per ricevere e processare le notifiche IPN — riusa la stessa logica di idempotenza, scrittura `Payment` e invio email del flusso webhook v2
+- Nuovo setting `paypal_account_type` (`business` | `personal`) nella tab "Integrazione PayPal": commuta la UI e il flusso di conferma pagamento
+- UI Impostazioni: sezione "Configurazione IPN" con istruzioni step-by-step per impostare l'URL IPN nel pannello PayPal, mostrata solo per account Personale
+- `PayPalDonateProvider`: aggiunge automaticamente il parametro `notify_url` nel form Donate quando l'account è Personale, in modo che PayPal invii l'IPN al nostro endpoint
+
+### Changed
+
+- UI Impostazioni → Tab "Integrazione PayPal": le sezioni "Credenziali API" e "Webhook ID" sono ora nascoste quando si seleziona "Conto Personale" (non sono utilizzabili senza Conto Business)
+
 ## [0.5.0] — 2026-05-07
 
 ### Added
@@ -26,7 +40,7 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 - Pulsante "Dona per sbloccare" in modalità `paypal_donate` reindirizza direttamente a `paypal.com/donate/?hosted_button_id=...` con importo e valuta precompilati
 - Messaggi di errore/successo inline nel widget per feedback all'utente dopo la donazione
 
-## [0.3.0] — 2026-05-07
+## [pre-0.2.0 — Stats & Build pipeline] — 2026-05-07
 
 ### Added
 
@@ -94,8 +108,5 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 - Capability check su tutti gli endpoint admin
 - `noindex` su attachment protetti e response endpoint file
 
-[0.5.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/miziomon/wp-paid-attachments/releases/tag/v0.1.0
+[0.2.0]: https://github.com/miziomon/wp-paid-attachments/releases/tag/v0.2.0

@@ -105,6 +105,7 @@ final class AdminController extends RestController {
 	private function get_defaults(): array {
 		return array(
 			'paypal_mode'                => 'sandbox',
+			'paypal_account_type'        => 'business',
 			'paypal_client_id'           => '',
 			'paypal_client_secret'       => '',
 			'paypal_donate_button_id'    => '',
@@ -136,6 +137,9 @@ final class AdminController extends RestController {
 			'paypal_mode'                => in_array( $settings['paypal_mode'] ?? '', array( 'sandbox', 'live' ), true )
 				? $settings['paypal_mode']
 				: 'sandbox',
+			'paypal_account_type'        => in_array( $settings['paypal_account_type'] ?? '', array( 'business', 'personal' ), true )
+				? $settings['paypal_account_type']
+				: 'business',
 			'paypal_client_id'           => sanitize_text_field( $settings['paypal_client_id'] ?? '' ),
 			'paypal_client_secret'       => sanitize_text_field( $settings['paypal_client_secret'] ?? '' ),
 			'paypal_donate_button_id'    => sanitize_text_field( $settings['paypal_donate_button_id'] ?? '' ),
@@ -173,6 +177,10 @@ final class AdminController extends RestController {
 			'paypal_mode'                => array(
 				'type' => 'string',
 				'enum' => array( 'sandbox', 'live' ),
+			),
+			'paypal_account_type'        => array(
+				'type' => 'string',
+				'enum' => array( 'business', 'personal' ),
 			),
 			'paypal_client_id'           => array( 'type' => 'string' ),
 			'paypal_client_secret'       => array( 'type' => 'string' ),

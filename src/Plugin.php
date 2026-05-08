@@ -18,6 +18,7 @@ use PaidAttachments\Database\PaymentRepository;
 use PaidAttachments\Database\UnlockCodeRepository;
 use PaidAttachments\Email\EmailSender;
 use PaidAttachments\Email\TemplateRenderer;
+use PaidAttachments\Payment\IpnVerifier;
 use PaidAttachments\Payment\PayPalDonateProvider;
 use PaidAttachments\Payment\PayPalSmartButtonsProvider;
 use PaidAttachments\Database\StatsRepository;
@@ -25,6 +26,7 @@ use PaidAttachments\REST\AdminController;
 use PaidAttachments\REST\AttachmentController;
 use PaidAttachments\REST\CheckoutController;
 use PaidAttachments\REST\FreeViewController;
+use PaidAttachments\REST\IpnController;
 use PaidAttachments\REST\StatsController;
 use PaidAttachments\REST\UnlockController;
 use PaidAttachments\REST\WebhookController;
@@ -98,6 +100,7 @@ final class Plugin {
 		( new FreeViewController( $config_repo ) )->register();
 		( new CheckoutController( $config_repo, $payment_repo, new PayPalSmartButtonsProvider() ) )->register();
 		( new WebhookController( $providers, $payment_repo, $config_repo, $email_sender ) )->register();
+		( new IpnController( new IpnVerifier(), $payment_repo, $config_repo, $email_sender ) )->register();
 	}
 
 	/**
