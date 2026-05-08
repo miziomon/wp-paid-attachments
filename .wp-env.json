@@ -4,6 +4,9 @@
   "plugins": [
     "."
   ],
+  "themes": [
+    "https://downloads.wordpress.org/theme/blocksy.latest-stable.zip"
+  ],
   "config": {
     "WP_DEBUG": true,
     "WP_DEBUG_LOG": true,

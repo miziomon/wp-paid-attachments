@@ -69,6 +69,48 @@ final class AttachmentPageRenderer {
 		remove_action( 'template_redirect', 'wp_redirect_to_attachment_parent_post' );
 		// Rimuove anche il redirect canonico che può interferire.
 		remove_action( 'template_redirect', 'redirect_canonical' );
+
+		// Per le attachment PROTETTE prendiamo controllo completo del template.
+		// Alcuni temi (Blocksy, Astra, Kadence ecc.) renderizzano l'immagine
+		// HD fuori da `the_content` con template/block custom, bypassando il
+		// nostro filtro principale. L'unico modo robusto è sostituire l'intera
+		// risposta HTML, mantenendo solo header e footer del tema.
+		$post = get_post();
+		if ( ! $post ) {
+			return;
+		}
+
+		$config = $this->config_repo->find_by_attachment_id( $post->ID );
+		if ( ! $config || ! $config->enabled ) {
+			return;
+		}
+
+		$this->render_protected_template( $post->ID, $config );
+		exit;
+	}
+
+	/**
+	 * Renderizza un template minimale per attachment protetti.
+	 *
+	 * Usa `get_header()` / `get_footer()` del tema attivo per preservare
+	 * stili e navigazione, ma sostituisce il contenuto principale con il
+	 * solo Web Component `<wppa-donation-widget>`.
+	 *
+	 * @param int              $attachment_id ID attachment.
+	 * @param AttachmentConfig $config        Configurazione attachment.
+	 * @return void
+	 */
+	private function render_protected_template( int $attachment_id, AttachmentConfig $config ): void {
+		// Header tema (carica wp_head, stili, nav, ecc.).
+		get_header();
+
+		printf(
+			'<main id="wppa-protected-main" class="wppa-protected-main" style="max-width:760px;margin:2rem auto;padding:0 1rem;">%s</main>',
+			$this->render_widget( $attachment_id, $config ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		);
+
+		// Footer tema (carica wp_footer, scripts, ecc.).
+		get_footer();
 	}
 
 	/**

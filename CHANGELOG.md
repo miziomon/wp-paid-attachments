@@ -8,6 +8,16 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 > **Nota sulla cronologia delle versioni.**
 > I tag git pubblicati sono `v0.2.0` e `v0.3.0`. La release `v0.2.0` è la prima release pubblica del plugin e raccoglie tutte le iterazioni di sviluppo precedenti, documentate qui sotto come sub-entry `[0.2.0-dev.N]` (storiche, non corrispondono a tag git separati).
 
+## [0.4.1] — 2026-05-08
+
+### Fixed
+
+- Compatibilità con temi che renderizzano l'immagine HD fuori da `the_content` (es. Blocksy, Astra, Kadence, alcuni block-theme): per le attachment **protette** il plugin ora prende controllo completo del template via `template_redirect`, mostrando solo `get_header()` + Web Component paywall + `get_footer()`. Il filtro `the_content` resta come strategia per attachment non protetti. Garantisce che l'URL del file HD non venga mai incluso nel HTML di pagine protette, indipendentemente dal tema.
+
+### Added
+
+- `.wp-env.json`: include Blocksy come tema preinstallato per testare la compatibilità con temi non-classici negli ambienti `npm run wp-env start` freschi.
+
 ## [0.4.0] — 2026-05-08
 
 ### Added
@@ -152,6 +162,7 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 - Capability check su tutti gli endpoint admin
 - `noindex` su attachment protetti e response endpoint file
 
+[0.4.1]: https://github.com/miziomon/wp-paid-attachments/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.0...v0.3.1
