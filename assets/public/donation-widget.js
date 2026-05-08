@@ -563,16 +563,30 @@ class WppaDonationWidget extends HTMLElement {
 		}
 	}
 
-	_redirectPayPalDonate() {
-		const btnId = this.paypalDonateButtonId;
-		if ( ! btnId ) {
-			this._showDonationError( 'Donate Button ID non configurato. Contatta l\'amministratore.' );
-			return;
+	async _redirectPayPalDonate() {
+		const amount = parseFloat( this._selectedAmount || 1 );
+		try {
+			const response = await fetch( `${ this.apiRoot }/donate-url`, {
+				method:  'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-WP-Nonce':   this.nonce,
+				},
+				body: JSON.stringify( {
+					attachment_id: this.attachmentId,
+					amount,
+					return_url:    window.location.href,
+				} ),
+			} );
+			const data = await response.json();
+			if ( ! response.ok || ! data.url ) {
+				this._showDonationError( data.message || 'Impossibile avviare la donazione. Contatta l\'amministratore.' );
+				return;
+			}
+			window.location.href = data.url;
+		} catch ( err ) {
+			this._showDonationError( 'Errore di rete. Riprova.' );
 		}
-		const amount   = this._selectedAmount || '';
-		const currency = this.currency;
-		const url      = `https://www.paypal.com/donate/?hosted_button_id=${ encodeURIComponent( btnId ) }&amount=${ encodeURIComponent( amount ) }&currency_code=${ encodeURIComponent( currency ) }`;
-		window.location.href = url;
 	}
 
 	async _renderSmartButtons() {

@@ -278,8 +278,17 @@ export default function SettingsForm( { settings, onSave, isSaving } ) {
 								<SelectControl
 									label="Modalità di pagamento predefinita"
 									value={ form.default_payment_mode }
-									options={ PAYMENT_MODE_OPTIONS }
+									options={
+										( form.paypal_account_type || 'business' ) === 'personal'
+											? PAYMENT_MODE_OPTIONS.filter( ( o ) => o.value === 'paypal_donate' )
+											: PAYMENT_MODE_OPTIONS
+									}
 									onChange={ ( v ) => set( 'default_payment_mode', v ) }
+									help={
+										( form.paypal_account_type || 'business' ) === 'personal'
+											? 'Smart Buttons richiedono un Conto Business. Solo "PayPal Donate" è disponibile per Conto Personale.'
+											: undefined
+									}
 								/>
 								<SelectControl
 									label="Valuta"

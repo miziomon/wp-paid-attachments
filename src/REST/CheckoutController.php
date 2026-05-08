@@ -11,6 +11,7 @@ namespace PaidAttachments\REST;
 
 use PaidAttachments\Database\AttachmentConfigRepository;
 use PaidAttachments\Database\PaymentRepository;
+use PaidAttachments\Payment\PayPalDonateProvider;
 use PaidAttachments\Payment\PayPalSmartButtonsProvider;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -94,6 +95,34 @@ final class CheckoutController extends RestController {
 
 		register_rest_route(
 			self::NAMESPACE,
+			'/donate-url',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'build_donate_url' ),
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'attachment_id' => array(
+						'type'     => 'integer',
+						'required' => true,
+						'minimum'  => 1,
+					),
+					'amount'        => array(
+						'type'     => 'number',
+						'required' => true,
+						'minimum'  => 0.01,
+					),
+					'return_url'    => array(
+						'type'              => 'string',
+						'required'          => false,
+						'default'           => '',
+						'sanitize_callback' => 'esc_url_raw',
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
 			'/checkout/capture',
 			array(
 				'methods'             => 'POST',
@@ -144,6 +173,46 @@ final class CheckoutController extends RestController {
 		}
 
 		return $this->success( $result['payload'] ?? array(), 201 );
+	}
+
+	/**
+	 * POST /wppa/v1/donate-url — Costruisce l'URL del form PayPal Donate.
+	 *
+	 * Usato dal Web Component frontend in modalità `paypal_donate` per
+	 * ottenere l'URL corretto (con `business`+`notify_url` per Personal,
+	 * `hosted_button_id` per Business). La logica di branching è in
+	 * `PayPalDonateProvider::create_payment()`.
+	 *
+	 * @param WP_REST_Request $request Richiesta REST.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function build_donate_url( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+		$attachment_id = (int) $request->get_param( 'attachment_id' );
+		$amount        = (float) $request->get_param( 'amount' );
+		$return_url    = (string) $request->get_param( 'return_url' );
+
+		if ( ! $this->config_repo->is_protected( $attachment_id ) ) {
+			return $this->error( 'not_protected', __( 'Attachment non protetto.', 'wp-paid-attachments' ), 404 );
+		}
+
+		$config   = $this->config_repo->find_by_attachment_id( $attachment_id );
+		$currency = $config ? $config->currency : 'EUR';
+
+		// Fallback: se return_url non fornito, usa la pagina dell'attachment.
+		if ( '' === $return_url ) {
+			$return_url = (string) get_permalink( $attachment_id );
+		}
+
+		$cancel_url = $return_url . ( str_contains( $return_url, '?' ) ? '&' : '?' ) . 'wppa_payment=cancel';
+
+		$donate_provider = new PayPalDonateProvider();
+		$result          = $donate_provider->create_payment( $attachment_id, $amount, $currency, $return_url, $cancel_url );
+
+		if ( ! isset( $result['url'] ) ) {
+			return $this->error( 'donate_url_error', __( 'Impossibile costruire URL Donate.', 'wp-paid-attachments' ), 500 );
+		}
+
+		return $this->success( array( 'url' => $result['url'] ) );
 	}
 
 	/**

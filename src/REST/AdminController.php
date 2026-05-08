@@ -134,21 +134,29 @@ final class AdminController extends RestController {
 	 * @return array<string, mixed>
 	 */
 	private function sanitize_settings( array $settings ): array {
+		$account_type = in_array( $settings['paypal_account_type'] ?? '', array( 'business', 'personal' ), true )
+			? $settings['paypal_account_type']
+			: 'business';
+
+		// Per i Conti Personali, Smart Buttons non sono utilizzabili: forziamo paypal_donate.
+		$payment_mode = in_array( $settings['default_payment_mode'] ?? '', array( 'paypal_donate', 'paypal_smart', 'both' ), true )
+			? $settings['default_payment_mode']
+			: 'paypal_donate';
+		if ( 'personal' === $account_type ) {
+			$payment_mode = 'paypal_donate';
+		}
+
 		return array(
 			'paypal_mode'                => in_array( $settings['paypal_mode'] ?? '', array( 'sandbox', 'live' ), true )
 				? $settings['paypal_mode']
 				: 'sandbox',
-			'paypal_account_type'        => in_array( $settings['paypal_account_type'] ?? '', array( 'business', 'personal' ), true )
-				? $settings['paypal_account_type']
-				: 'business',
+			'paypal_account_type'        => $account_type,
 			'paypal_client_id'           => sanitize_text_field( $settings['paypal_client_id'] ?? '' ),
 			'paypal_client_secret'       => sanitize_text_field( $settings['paypal_client_secret'] ?? '' ),
 			'paypal_donate_button_id'    => sanitize_text_field( $settings['paypal_donate_button_id'] ?? '' ),
 			'paypal_merchant_id'         => sanitize_text_field( $settings['paypal_merchant_id'] ?? '' ),
 			'paypal_webhook_id'          => sanitize_text_field( $settings['paypal_webhook_id'] ?? '' ),
-			'default_payment_mode'       => in_array( $settings['default_payment_mode'] ?? '', array( 'paypal_donate', 'paypal_smart', 'both' ), true )
-				? $settings['default_payment_mode']
-				: 'paypal_donate',
+			'default_payment_mode'       => $payment_mode,
 			'default_currency'           => strtoupper( sanitize_text_field( $settings['default_currency'] ?? 'EUR' ) ),
 			'default_suggested_amounts'  => array_map(
 				'absint',

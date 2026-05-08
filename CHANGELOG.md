@@ -8,6 +8,18 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 > **Nota sulla cronologia delle versioni.**
 > I tag git pubblicati sono `v0.2.0` e `v0.3.0`. La release `v0.2.0` è la prima release pubblica del plugin e raccoglie tutte le iterazioni di sviluppo precedenti, documentate qui sotto come sub-entry `[0.2.0-dev.N]` (storiche, non corrispondono a tag git separati).
 
+## [0.3.2] — 2026-05-08
+
+### Fixed
+
+- Pulsante "Dona" sul Web Component frontend: il widget costruiva l'URL Donate lato JavaScript usando sempre `hosted_button_id`, ignorando quindi il setting `paypal_merchant_id` per i Conti Personali (causa dell'errore "C'è un problema con la pagina di questa organizzazione" su PayPal). Ora il widget chiama il nuovo endpoint REST per ottenere l'URL costruito server-side.
+- UI Impostazioni → Tab "Default attachment": il dropdown "Modalità di pagamento predefinita" ora mostra solo "PayPal Donate" quando `paypal_account_type = personal` (Smart Buttons richiedono Conto Business).
+- `AdminController::sanitize_settings()`: forza `default_payment_mode = paypal_donate` quando l'account type è Personale (difesa lato server contro setting incoerenti già salvati).
+
+### Added
+
+- Nuovo endpoint REST `POST /wppa/v1/donate-url`: costruisce server-side l'URL del form PayPal Donate (con `business`+`notify_url` per Personal, `hosted_button_id` per Business) usando `PayPalDonateProvider::create_payment()` come unica fonte di verità.
+
 ## [0.3.1] — 2026-05-08
 
 ### Added
@@ -126,6 +138,7 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 - Capability check su tutti gli endpoint admin
 - `noindex` su attachment protetti e response endpoint file
 
+[0.3.2]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/miziomon/wp-paid-attachments/releases/tag/v0.2.0
