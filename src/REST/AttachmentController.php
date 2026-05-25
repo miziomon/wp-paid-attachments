@@ -124,6 +124,10 @@ final class AttachmentController extends RestController {
 	/**
 	 * GET /wppa/v1/admin/attachments — Lista attachment immagine paginata.
 	 *
+	 * Il filtro `protected` / `unprotected` viene applicato direttamente nella
+	 * WP_Query tramite `post__in` / `post__not_in`, così paginazione e conteggi
+	 * totali sono sempre coerenti con il set filtrato.
+	 *
 	 * @param WP_REST_Request $request Richiesta REST.
 	 * @return WP_REST_Response|WP_Error
 	 */
@@ -132,6 +136,19 @@ final class AttachmentController extends RestController {
 		$page     = (int) $request->get_param( 'page' );
 		$search   = (string) $request->get_param( 'search' );
 		$filter   = (string) $request->get_param( 'filter' );
+
+		// Recupera gli ID protetti una volta sola quando serve il filtro.
+		if ( 'protected' === $filter || 'unprotected' === $filter ) {
+			$protected_ids = $this->config_repo->get_protected_ids();
+
+			// Nessun attachment protetto in DB: risposta vuota immediata per "protected".
+			if ( 'protected' === $filter && empty( $protected_ids ) ) {
+				$response = $this->success( array() );
+				$response->header( 'X-WP-Total', '0' );
+				$response->header( 'X-WP-TotalPages', '0' );
+				return $response;
+			}
+		}
 
 		$query_args = array(
 			'post_type'      => 'attachment',
@@ -147,19 +164,18 @@ final class AttachmentController extends RestController {
 			$query_args['s'] = $search;
 		}
 
+		if ( 'protected' === $filter && ! empty( $protected_ids ) ) {
+			$query_args['post__in'] = $protected_ids;
+		} elseif ( 'unprotected' === $filter && ! empty( $protected_ids ) ) {
+			$query_args['post__not_in'] = $protected_ids;
+		}
+
 		$query = new \WP_Query( $query_args );
 		$items = array();
 
 		foreach ( $query->posts as $post ) {
 			$config  = $this->config_repo->find_by_attachment_id( $post->ID );
 			$enabled = $config ? (bool) $config->enabled : false;
-
-			if ( 'protected' === $filter && ! $enabled ) {
-				continue;
-			}
-			if ( 'unprotected' === $filter && $enabled ) {
-				continue;
-			}
 
 			$items[] = array(
 				'id'        => $post->ID,
@@ -177,13 +193,13 @@ final class AttachmentController extends RestController {
 		}
 
 		// Aggiunge stats per soli attachment protetti in un'unica query batch.
-		$protected_ids = array_column(
+		$items_protected_ids = array_column(
 			array_filter( $items, static fn ( array $i ) => $i['protected'] ),
 			'id'
 		);
 
-		if ( ! empty( $protected_ids ) ) {
-			$stats_map = $this->stats_repo->get_per_attachment_stats( $protected_ids );
+		if ( ! empty( $items_protected_ids ) ) {
+			$stats_map = $this->stats_repo->get_per_attachment_stats( $items_protected_ids );
 			foreach ( $items as &$item ) {
 				if ( $item['protected'] && isset( $stats_map[ $item['id'] ] ) ) {
 					$item['stats'] = $stats_map[ $item['id'] ];

@@ -8,6 +8,17 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 > **Nota sulla cronologia delle versioni.**
 > I tag git pubblicati sono `v0.2.0` e `v0.3.0`. La release `v0.2.0` è la prima release pubblica del plugin e raccoglie tutte le iterazioni di sviluppo precedenti, documentate qui sotto come sub-entry `[0.2.0-dev.N]` (storiche, non corrispondono a tag git separati).
 
+## [0.5.0] — 2026-05-25
+
+### Added
+
+- Redirect 301 sulle attachment page **non protette** verso il post genitore (o home se manca): elimina thin content dall'indice e trasferisce equity SEO al contenuto ospitante. Implementato in `AttachmentPageRenderer::prevent_attachment_redirect()`. Gli attachment protetti continuano a mostrare il paywall via render template dedicato.
+- `AttachmentConfigRepository::get_protected_ids()`: ritorna gli ID di tutti gli attachment con `enabled = 1`, usato dal controller REST admin per filtrare in query.
+
+### Fixed
+
+- Pagina admin "Attachment protetti": il filtro **Solo protetti** / **Solo non protetti** ora funziona correttamente. Prima il filtro veniva applicato in PHP dopo una `WP_Query` già paginata, quindi se la pagina corrente non conteneva attachment protetti la lista risultava vuota anche se in DB ce n'erano altri. Ora il filtro entra direttamente nella query tramite `post__in` / `post__not_in`, con conteggi totali e paginazione coerenti.
+
 ## [0.4.1] — 2026-05-08
 
 ### Fixed
@@ -162,6 +173,7 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 - Capability check su tutti gli endpoint admin
 - `noindex` su attachment protetti e response endpoint file
 
+[0.5.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/miziomon/wp-paid-attachments/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/miziomon/wp-paid-attachments/compare/v0.3.1...v0.3.2

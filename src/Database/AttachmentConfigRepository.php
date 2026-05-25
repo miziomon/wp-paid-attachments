@@ -95,6 +95,24 @@ final class AttachmentConfigRepository {
 	}
 
 	/**
+	 * Restituisce gli ID di tutti gli attachment attivamente protetti.
+	 *
+	 * Utilizzato dal controller REST per costruire query WP_Query filtrate
+	 * tramite `post__in` / `post__not_in`, evitando filtri post-query su
+	 * dati già paginati.
+	 *
+	 * @return int[]
+	 */
+	public function get_protected_ids(): array {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows = $this->db->get_col(
+			'SELECT attachment_id FROM `' . $this->table() . '` WHERE enabled = 1'
+		);
+
+		return array_map( 'intval', is_array( $rows ) ? $rows : array() );
+	}
+
+	/**
 	 * Restituisce tutte le configurazioni attive con paginazione.
 	 *
 	 * @param int $per_page Righe per pagina.

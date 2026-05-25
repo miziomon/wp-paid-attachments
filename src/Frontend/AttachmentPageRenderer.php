@@ -52,11 +52,20 @@ final class AttachmentPageRenderer {
 	}
 
 	/**
-	 * Impedisce i redirect di WordPress su tutte le attachment page.
+	 * Gestisce il routing delle attachment page: redirect 301 per le non protette,
+	 * render paywall per le protette.
 	 *
-	 * WordPress 6.4+ reindirizza tutte le attachment page verso il post parent
-	 * o la homepage (opzione `wp_attachment_pages_redirect`). Questo metodo
-	 * rimuove quel comportamento per TUTTI gli attachment, protetti o no.
+	 * Per gli attachment NON protetti esegue un redirect 301 permanente verso il
+	 * post genitore (o la home se manca): elimina thin content dall'indice SEO e
+	 * trasferisce l'eventuale equity al contenuto ospitante.
+	 *
+	 * Per gli attachment PROTETTI prende controllo completo del template: alcuni
+	 * temi (Blocksy, Astra, Kadence ecc.) renderizzano l'immagine HD fuori da
+	 * `the_content` con template/block custom, bypassando il filtro principale.
+	 * L'unico modo robusto è sostituire l'intera risposta HTML.
+	 *
+	 * Rimuove preventivamente i due handler core (`wp_redirect_to_attachment_parent_post`
+	 * e `redirect_canonical`) per evitare interferenze con entrambi i flussi.
 	 *
 	 * @return void
 	 */
@@ -70,22 +79,25 @@ final class AttachmentPageRenderer {
 		// Rimuove anche il redirect canonico che può interferire.
 		remove_action( 'template_redirect', 'redirect_canonical' );
 
-		// Per le attachment PROTETTE prendiamo controllo completo del template.
-		// Alcuni temi (Blocksy, Astra, Kadence ecc.) renderizzano l'immagine
-		// HD fuori da `the_content` con template/block custom, bypassando il
-		// nostro filtro principale. L'unico modo robusto è sostituire l'intera
-		// risposta HTML, mantenendo solo header e footer del tema.
 		$post = get_post();
 		if ( ! $post ) {
 			return;
 		}
 
 		$config = $this->config_repo->find_by_attachment_id( $post->ID );
-		if ( ! $config || ! $config->enabled ) {
-			return;
+
+		if ( $config && $config->enabled ) {
+			// Attachment PROTETTO: mostra il template paywall completo.
+			$this->render_protected_template( $post->ID, $config );
+			exit;
 		}
 
-		$this->render_protected_template( $post->ID, $config );
+		// Attachment NON PROTETTO: redirect 301 verso il post genitore o la home.
+		$target = $post->post_parent
+			? get_permalink( $post->post_parent )
+			: home_url( '/' );
+
+		wp_safe_redirect( $target, 301 );
 		exit;
 	}
 
