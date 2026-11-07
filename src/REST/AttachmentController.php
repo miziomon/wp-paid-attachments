@@ -11,6 +11,7 @@ namespace PaidAttachments\REST;
 
 use PaidAttachments\Database\AttachmentConfigRepository;
 use PaidAttachments\Database\StatsRepository;
+use PaidAttachments\Frontend\AttachmentPageRenderer;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
@@ -233,8 +234,9 @@ final class AttachmentController extends RestController {
 		if ( ! $config ) {
 			return $this->success(
 				array(
-					'id'     => $id,
-					'exists' => false,
+					'id'            => $id,
+					'exists'        => false,
+					'redirect_mode' => $this->get_redirect_mode( $id ),
 				)
 			);
 		}
@@ -264,6 +266,16 @@ final class AttachmentController extends RestController {
 		$data = $this->sanitize_config( $body );
 		$this->config_repo->upsert( $id, $data );
 
+		// Override redirect per-attachment: salvato come post meta (vale anche senza protezione).
+		if ( isset( $body['redirect_mode'] ) ) {
+			$redirect_mode = in_array( $body['redirect_mode'], array( 'parent', 'none' ), true ) ? $body['redirect_mode'] : '';
+			if ( '' === $redirect_mode ) {
+				delete_post_meta( $id, AttachmentPageRenderer::REDIRECT_META_KEY );
+			} else {
+				update_post_meta( $id, AttachmentPageRenderer::REDIRECT_META_KEY, $redirect_mode );
+			}
+		}
+
 		$config = $this->config_repo->find_by_attachment_id( $id );
 
 		return $this->success( $config ? $this->config_to_array( $config ) : array_merge( array( 'attachment_id' => $id ), $data ) );
@@ -288,7 +300,18 @@ final class AttachmentController extends RestController {
 			'paywall_text'       => $config->custom_text,
 			'email_subject'      => $config->custom_email_subject,
 			'email_message'      => $config->custom_email_body,
+			'redirect_mode'      => $this->get_redirect_mode( $config->attachment_id ),
 		);
+	}
+
+	/**
+	 * Override redirect per-attachment: '' (default globale), 'parent' o 'none'.
+	 *
+	 * @param int $attachment_id ID attachment.
+	 * @return string
+	 */
+	private function get_redirect_mode( int $attachment_id ): string {
+		return (string) get_post_meta( $attachment_id, AttachmentPageRenderer::REDIRECT_META_KEY, true );
 	}
 
 	/**

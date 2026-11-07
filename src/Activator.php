@@ -73,7 +73,7 @@ final class Activator {
 			'paypal_mode'                => 'sandbox',
 			// --- Default per nuovi attachment ---
 			'default_payment_mode'       => 'paypal_donate',
-			'default_suggested_amounts'  => array( 1, 3, 5 ),
+			'default_suggested_amounts'  => array( 1 ),
 			'default_min_amount'         => 1.00,
 			'default_currency'           => 'EUR',
 			'default_code_validity_days' => 30,

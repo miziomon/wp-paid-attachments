@@ -169,7 +169,7 @@ final class AttachmentConfigRepository {
 	 */
 	public function upsert( int $attachment_id, array $data ): int {
 		$now     = ( new DateTimeImmutable() )->format( 'Y-m-d H:i:s' );
-		$amounts = ! empty( $data['suggested_amounts'] ) ? wp_json_encode( $data['suggested_amounts'] ) : wp_json_encode( array( 1, 3, 5 ) );
+		$amounts = ! empty( $data['suggested_amounts'] ) ? wp_json_encode( $data['suggested_amounts'] ) : wp_json_encode( array( 1 ) );
 
 		$fields = array(
 			'attachment_id'        => $attachment_id,

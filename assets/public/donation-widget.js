@@ -366,6 +366,11 @@ class WppaDonationWidget extends HTMLElement {
 		const btnDonate = sr.querySelector( '.state-a .btn-donate' );
 		btnDonate.disabled = true;
 
+		// Con un solo importo non c'è scelta da fare: lo preselezioniamo.
+		if ( this.amounts.length === 1 ) {
+			this._selectAmount( this.amounts[ 0 ], amountsContainer.firstChild );
+		}
+
 		// Link free view.
 		const freeViewBtn = sr.querySelector( '.link-free-view' );
 		freeViewBtn.style.display = this.allowFreeView ? '' : 'none';

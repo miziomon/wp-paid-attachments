@@ -18,6 +18,12 @@ import {
 } from '@wordpress/components';
 import apiFetch from '@wordpress/api-fetch';
 
+const REDIRECT_MODE_OPTIONS = [
+	{ label: '— Default globale —', value: '' },
+	{ label: 'Reindirizza al post genitore', value: 'parent' },
+	{ label: 'Mostra la pagina attachment standard', value: 'none' },
+];
+
 const PAYMENT_MODE_OPTIONS = [
 	{ label: '— Default globale —', value: '' },
 	{ label: 'PayPal Donate', value: 'paypal_donate' },
@@ -44,6 +50,7 @@ export default function AttachmentEditor( { item, onClose, onSaved } ) {
 					paywall_text:       config.paywall_text ?? '',
 					email_subject:      config.email_subject ?? '',
 					email_message:      config.email_message ?? '',
+					redirect_mode:      config.redirect_mode ?? '',
 				} );
 			} )
 			.catch( () => setNotice( { type: 'error', message: 'Errore nel caricamento della configurazione.' } ) );
@@ -105,6 +112,17 @@ export default function AttachmentEditor( { item, onClose, onSaved } ) {
 									onChange={ ( v ) => set( 'enabled', v ) }
 								/>
 							</PanelRow>
+							{ ! form.enabled && (
+								<PanelRow>
+									<SelectControl
+										label="Pagina attachment (non protetto)"
+										value={ form.redirect_mode }
+										options={ REDIRECT_MODE_OPTIONS }
+										onChange={ ( v ) => set( 'redirect_mode', v ) }
+										help="Se l'attachment è protetto viene sempre mostrato il paywall."
+									/>
+								</PanelRow>
+							) }
 						</PanelBody>
 
 						{ form.enabled && (
@@ -132,7 +150,7 @@ export default function AttachmentEditor( { item, onClose, onSaved } ) {
 											label="Importi suggeriti (separati da virgola)"
 											value={ form.suggested_amounts }
 											onChange={ ( v ) => set( 'suggested_amounts', v ) }
-											placeholder="Default globale (es. 1, 3, 5)"
+											placeholder="Default globale (es. 1)"
 										/>
 									</PanelRow>
 								</PanelBody>

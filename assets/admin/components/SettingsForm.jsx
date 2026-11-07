@@ -33,7 +33,7 @@ const PAYPAL_MODE_OPTIONS = [
 
 const PAYPAL_ACCOUNT_TYPE_OPTIONS = [
 	{ label: 'Business (REST API + Webhook v2)', value: 'business' },
-	{ label: 'Personale (solo Donate Button + IPN)', value: 'personal' },
+	{ label: 'Personale (pagamento standard PayPal + IPN/PDT)', value: 'personal' },
 ];
 
 const TABS = [
@@ -72,7 +72,7 @@ export default function SettingsForm( { settings, onSave, isSaving } ) {
 									onChange={ ( v ) => set( 'paypal_account_type', v ) }
 									help={
 										( form.paypal_account_type || 'business' ) === 'personal'
-											? 'Conto Personale: utilizzo del solo pulsante Donate hosted; conferma pagamenti via IPN. Smart Buttons e Webhook v2 non disponibili.'
+											? 'Conto Personale: pagamento standard PayPal (_xclick) col Merchant ID; conferma pagamenti via PDT/IPN. Smart Buttons e Webhook v2 non disponibili.'
 											: 'Conto Business: pieno accesso a REST API, Smart Buttons inline e Webhook v2.'
 									}
 								/>
@@ -151,7 +151,7 @@ export default function SettingsForm( { settings, onSave, isSaving } ) {
 											<strong>{ 'Merchant ID PayPal (Conto Personale)' }</strong>
 										</p>
 										<p className="description">
-											{ 'Per i Conti Personali PayPal usiamo il pulsante Donate "non-hosted": serve solo il tuo ' }
+											{ 'Per i Conti Personali PayPal usiamo il pagamento standard (_xclick): serve solo il tuo ' }
 											<strong>{ 'Merchant ID' }</strong>
 											{ ' (anche detto Account ID).' }
 											<br />
@@ -357,7 +357,7 @@ export default function SettingsForm( { settings, onSave, isSaving } ) {
 												.filter( ( n ) => ! isNaN( n ) && n > 0 )
 										)
 									}
-									help="Es: 1, 3, 5"
+									help="Es: 1 (un solo importo viene preselezionato)"
 								/>
 								<NumberControl
 									label="Validità codice (giorni)"
@@ -442,6 +442,13 @@ export default function SettingsForm( { settings, onSave, isSaving } ) {
 						{ /* ── Tab: Avanzate ── */ }
 						{ tab.name === 'advanced' && (
 							<>
+								<ToggleControl
+									label="Reindirizza le pagine attachment non protette al post genitore"
+									help="Redirect 301 verso il post che contiene l'immagine (o la home se manca). Se disattivo viene mostrata la pagina attachment standard. Si può cambiare per singola immagine dalla pagina Attachment protetti."
+									checked={ form.redirect_unprotected ?? true }
+									onChange={ ( v ) => set( 'redirect_unprotected', v ) }
+								/>
+								<hr className="wppa-settings-sep" />
 								<TextControl
 									label="Codice di sblocco master (superadmin)"
 									value={ form.master_unlock_code }

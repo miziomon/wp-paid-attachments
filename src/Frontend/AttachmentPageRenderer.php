@@ -22,6 +22,12 @@ use PaidAttachments\Domain\AttachmentConfig;
 final class AttachmentPageRenderer {
 
 	/**
+	 * Post meta con l'override per-attachment del redirect delle pagine non protette:
+	 * '' (o assente) = default globale, 'parent' = redirect al genitore, 'none' = pagina standard.
+	 */
+	const REDIRECT_META_KEY = '_wppa_redirect_mode';
+
+	/**
 	 * Repository configurazioni attachment.
 	 *
 	 * @var AttachmentConfigRepository
@@ -57,7 +63,8 @@ final class AttachmentPageRenderer {
 	 *
 	 * Per gli attachment NON protetti esegue un redirect 301 permanente verso il
 	 * post genitore (o la home se manca): elimina thin content dall'indice SEO e
-	 * trasferisce l'eventuale equity al contenuto ospitante.
+	 * trasferisce l'eventuale equity al contenuto ospitante. Il redirect si può
+	 * disattivare globalmente o per singolo attachment (vedi should_redirect_to_parent()).
 	 *
 	 * Per gli attachment PROTETTI prende controllo completo del template: alcuni
 	 * temi (Blocksy, Astra, Kadence ecc.) renderizzano l'immagine HD fuori da
@@ -92,6 +99,11 @@ final class AttachmentPageRenderer {
 			exit;
 		}
 
+		// Attachment NON PROTETTO con redirect disattivato: pagina attachment standard.
+		if ( ! $this->should_redirect_to_parent( $post->ID ) ) {
+			return;
+		}
+
 		// Attachment NON PROTETTO: redirect 301 verso il post genitore o la home.
 		$target = $post->post_parent
 			? get_permalink( $post->post_parent )
@@ -99,6 +111,30 @@ final class AttachmentPageRenderer {
 
 		wp_safe_redirect( $target, 301 );
 		exit;
+	}
+
+	/**
+	 * Decide se un attachment non protetto va reindirizzato al post genitore.
+	 *
+	 * L'override per-attachment (post meta) vince sull'impostazione globale.
+	 *
+	 * @param int $attachment_id ID attachment.
+	 * @return bool
+	 */
+	private function should_redirect_to_parent( int $attachment_id ): bool {
+		$mode = (string) get_post_meta( $attachment_id, self::REDIRECT_META_KEY, true );
+
+		if ( 'parent' === $mode ) {
+			return true;
+		}
+		if ( 'none' === $mode ) {
+			return false;
+		}
+
+		$settings = get_option( 'wppa_settings', array() );
+
+		// Default true: mantiene il comportamento introdotto in 0.5.0.
+		return (bool) ( $settings['redirect_unprotected'] ?? true );
 	}
 
 	/**

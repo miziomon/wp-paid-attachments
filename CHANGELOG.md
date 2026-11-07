@@ -8,6 +8,21 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 > **Nota sulla cronologia delle versioni.**
 > I tag git pubblicati sono `v0.2.0` e `v0.3.0`. La release `v0.2.0` è la prima release pubblica del plugin e raccoglie tutte le iterazioni di sviluppo precedenti, documentate qui sotto come sub-entry `[0.2.0-dev.N]` (storiche, non corrispondono a tag git separati).
 
+## [0.6.0] — 2026-11-07
+
+### Added
+
+- Opzione globale **Reindirizza le pagine attachment non protette al post genitore** (Impostazioni → Avanzate, setting `redirect_unprotected`, attiva di default per mantenere il comportamento di 0.5.0). Se disattivata viene mostrata la pagina attachment standard.
+- Override per singolo attachment nell'editor della pagina "Attachment protetti" (visibile quando la protezione è disattivata): *Default globale*, *Reindirizza al post genitore* o *Mostra la pagina attachment standard*. Salvato nel post meta `_wppa_redirect_mode`, esposto come `redirect_mode` dall'endpoint `/admin/attachments/{id}/config`. Gli attachment protetti mostrano sempre il paywall.
+
+### Changed
+
+- Importo predefinito unico da 1 € (prima 1, 3, 5) nei default di impostazioni e nuove configurazioni attachment. Quando c'è un solo importo il widget lo preseleziona e il pulsante di donazione è subito attivo.
+
+### Fixed
+
+- Conto Personale PayPal: il form Donate non-hosted (`paypal.com/donate?business=...`) rispondeva "Al momento l'organizzazione non può accettare donazioni". Ora il plugin usa il pagamento standard `cgi-bin/webscr?cmd=_xclick` con gli stessi parametri (`business`, `custom`, `return`, `notify_url`), quindi PDT e IPN continuano a confermare il pagamento e inviare il codice.
+
 ## [0.5.0] — 2026-05-25
 
 ### Added

@@ -114,11 +114,12 @@ final class AdminController extends RestController {
 			'paypal_webhook_id'          => '',
 			'default_payment_mode'       => 'paypal_donate',
 			'default_currency'           => 'EUR',
-			'default_suggested_amounts'  => array( 1, 3, 5 ),
+			'default_suggested_amounts'  => array( 1 ),
 			'default_code_validity_days' => 30,
 			'default_max_uses'           => 0,
 			'allow_free_view'            => true,
 			'free_view_daily_limit'      => 10,
+			'redirect_unprotected'       => true,
 			'default_paywall_title'      => '',
 			'default_paywall_text'       => '',
 			'default_email_subject'      => '',
@@ -164,12 +165,13 @@ final class AdminController extends RestController {
 				'absint',
 				is_array( $settings['default_suggested_amounts'] ?? null )
 					? $settings['default_suggested_amounts']
-					: array( 1, 3, 5 )
+					: array( 1 )
 			),
 			'default_code_validity_days' => absint( $settings['default_code_validity_days'] ?? 30 ),
 			'default_max_uses'           => absint( $settings['default_max_uses'] ?? 0 ),
 			'allow_free_view'            => (bool) ( $settings['allow_free_view'] ?? true ),
 			'free_view_daily_limit'      => absint( $settings['free_view_daily_limit'] ?? 10 ),
+			'redirect_unprotected'       => (bool) ( $settings['redirect_unprotected'] ?? true ),
 			'default_paywall_title'      => wp_kses_post( $settings['default_paywall_title'] ?? '' ),
 			'default_paywall_text'       => wp_kses_post( $settings['default_paywall_text'] ?? '' ),
 			'default_email_subject'      => sanitize_text_field( $settings['default_email_subject'] ?? '' ),
@@ -222,6 +224,7 @@ final class AdminController extends RestController {
 				'type'    => 'integer',
 				'minimum' => 1,
 			),
+			'redirect_unprotected'       => array( 'type' => 'boolean' ),
 			'default_paywall_title'      => array( 'type' => 'string' ),
 			'default_paywall_text'       => array( 'type' => 'string' ),
 			'default_email_subject'      => array( 'type' => 'string' ),

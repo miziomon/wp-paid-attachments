@@ -32,6 +32,16 @@ final class PayPalDonateProvider implements PaymentProviderInterface {
 	const LIVE_URL = 'https://www.paypal.com/donate';
 
 	/**
+	 * URL sandbox PayPal Payments Standard (Conto Personale).
+	 */
+	const SANDBOX_STANDARD_URL = 'https://www.sandbox.paypal.com/cgi-bin/webscr';
+
+	/**
+	 * URL live PayPal Payments Standard (Conto Personale).
+	 */
+	const LIVE_STANDARD_URL = 'https://www.paypal.com/cgi-bin/webscr';
+
+	/**
 	 * Identificativo provider.
 	 *
 	 * @return string
@@ -67,20 +77,24 @@ final class PayPalDonateProvider implements PaymentProviderInterface {
 		);
 
 		if ( 'personal' === $account_type ) {
-			// Conto Personale: form Donate "non-hosted" con merchant ID nel campo 'business'.
-			// La conferma del pagamento arriva tramite IPN (notify_url).
+			// Conto Personale: pagamento standard `_xclick` con merchant ID nel campo 'business'.
+			// Il form Donate non-hosted (/donate) risponde "l'organizzazione non può accettare
+			// donazioni" per i conti personali; `_xclick` invece arriva al checkout e mantiene
+			// gli stessi parametri (custom, return, notify_url), quindi IPN e PDT restano invariati.
 			$merchant_id = (string) ( $settings['paypal_merchant_id'] ?? '' );
+			$base_url    = 'live' === $mode ? self::LIVE_STANDARD_URL : self::SANDBOX_STANDARD_URL;
 
 			$params = array_merge(
 				array(
-					'business'     => $merchant_id,
-					'item_name'    => sprintf(
+					'cmd'         => '_xclick',
+					'business'    => $merchant_id,
+					'item_name'   => sprintf(
 						/* translators: %d: ID dell'attachment. */
 						__( 'Donazione per attachment #%d', 'wp-paid-attachments' ),
 						$attachment_id
 					),
-					'no_recurring' => '1',
-					'notify_url'   => rest_url( 'wppa/v1/ipn/paypal' ),
+					'no_shipping' => '1',
+					'notify_url'  => rest_url( 'wppa/v1/ipn/paypal' ),
 				),
 				$common
 			);

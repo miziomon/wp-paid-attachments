@@ -103,7 +103,7 @@ final class AttachmentConfig {
 			attachment_id: $attachment_id,
 			enabled: false,
 			payment_mode: (string) ( $settings['default_payment_mode'] ?? 'paypal_donate' ),
-			suggested_amounts: (array) ( $settings['default_suggested_amounts'] ?? array( 1, 3, 5 ) ),
+			suggested_amounts: (array) ( $settings['default_suggested_amounts'] ?? array( 1 ) ),
 			min_amount: (float) ( $settings['default_min_amount'] ?? 1.00 ),
 			currency: (string) ( $settings['default_currency'] ?? 'EUR' ),
 			code_validity_days: (int) ( $settings['default_code_validity_days'] ?? 30 ),
