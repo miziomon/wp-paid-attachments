@@ -28,9 +28,22 @@ final class Updater {
 	const REPO_URL = 'https://github.com/miziomon/wp-paid-attachments/';
 
 	/**
-	 * Inizializza il controllo aggiornamenti.
+	 * Pagina delle release, linkata dalla scheda Aggiornamenti.
+	 */
+	const RELEASES_URL = 'https://github.com/miziomon/wp-paid-attachments/releases';
+
+	/**
+	 * Istanza del checker, conservata per il controllo manuale dalla scheda Aggiornamenti.
 	 *
-	 * Da chiamare su `plugins_loaded` tramite Plugin::init().
+	 * @var object|null
+	 */
+	private static ?object $checker = null;
+
+	/**
+	 * Inizializza l'update checker.
+	 *
+	 * Chiamato da Plugin::init() su `plugins_loaded`. Se la libreria non è
+	 * disponibile (es. vendor/ mancante), il metodo esce silenziosamente.
 	 *
 	 * @return void
 	 */
@@ -48,5 +61,43 @@ final class Updater {
 		// Usa i release asset (ZIP allegato alla release) invece del
 		// codice sorgente auto-generato da GitHub (che non include vendor/ e build/).
 		$checker->getVcsApi()->enableReleaseAssets();
+		self::$checker = $checker;
+	}
+
+	/**
+	 * Stato dell'aggiornamento in base all'ultimo controllo salvato (nessuna chiamata a GitHub).
+	 *
+	 * @return array{current: string, latest: string, update_available: bool, checked_at: int, releases_url: string}|null
+	 *         Null se il checker non è disponibile.
+	 */
+	public static function status(): ?array {
+		if ( null === self::$checker ) {
+			return null;
+		}
+
+		$update = self::$checker->getUpdate();
+
+		return array(
+			'current'          => WPPA_VERSION,
+			'latest'           => $update ? (string) $update->version : WPPA_VERSION,
+			'update_available' => null !== $update,
+			'checked_at'       => (int) self::$checker->getUpdateState()->getLastCheck(),
+			'releases_url'     => self::RELEASES_URL,
+		);
+	}
+
+	/**
+	 * Interroga subito GitHub e restituisce lo stato aggiornato.
+	 *
+	 * @return array{current: string, latest: string, update_available: bool, checked_at: int, releases_url: string}|null
+	 */
+	public static function check(): ?array {
+		if ( null === self::$checker ) {
+			return null;
+		}
+
+		self::$checker->checkForUpdates();
+
+		return self::status();
 	}
 }

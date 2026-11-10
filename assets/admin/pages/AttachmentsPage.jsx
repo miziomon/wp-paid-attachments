@@ -60,8 +60,6 @@ export default function AttachmentsPage() {
 
 	return (
 		<div className="wppa-attachments-page">
-			<h1 className="wp-heading-inline">{ 'Attachment protetti' }</h1>
-
 			{ notice && (
 				<Notice
 					status={ notice.type }

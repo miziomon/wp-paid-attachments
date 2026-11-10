@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace PaidAttachments;
 
 use PaidAttachments\Admin\AdminMenu;
-use PaidAttachments\Admin\SettingsPage;
 use PaidAttachments\Database\AttachmentConfigRepository;
 use PaidAttachments\Frontend\AssetsLoader;
 use PaidAttachments\Frontend\AttachmentPageRenderer;
@@ -31,8 +30,10 @@ use PaidAttachments\REST\FreeViewController;
 use PaidAttachments\REST\IpnController;
 use PaidAttachments\REST\StatsController;
 use PaidAttachments\REST\UnlockController;
+use PaidAttachments\REST\UpdateController;
 use PaidAttachments\REST\WebhookController;
 use PaidAttachments\Support\Updater;
+use PaidAttachments\Support\UploadMimes;
 
 /**
  * Bootstrap centrale del plugin.
@@ -79,9 +80,11 @@ final class Plugin {
 		// Carica le traduzioni del plugin.
 		add_action( 'init', array( $this, 'load_textdomain' ) );
 
-		// Admin: menu e asset.
+		// Admin: pagina unica a schede e relativi asset.
 		( new AdminMenu() )->register();
-		( new SettingsPage() )->register();
+
+		// Upload dei file Markdown nella libreria media.
+		( new UploadMimes() )->register();
 
 		// Frontend pubblico.
 		$config_repo = new AttachmentConfigRepository( $GLOBALS['wpdb'] );
@@ -93,6 +96,7 @@ final class Plugin {
 		( new AdminController() )->register();
 		( new AttachmentController( $config_repo, $stats_repo ) )->register();
 		( new StatsController( $stats_repo ) )->register();
+		( new UpdateController() )->register();
 		$code_repo    = new UnlockCodeRepository( $GLOBALS['wpdb'] );
 		$payment_repo = new PaymentRepository( $GLOBALS['wpdb'] );
 		$email_sender = new EmailSender( $code_repo, new TemplateRenderer() );

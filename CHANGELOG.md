@@ -8,6 +8,23 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 > **Nota sulla cronologia delle versioni.**
 > I tag git pubblicati sono `v0.2.0` e `v0.3.0`. La release `v0.2.0` è la prima release pubblica del plugin e raccoglie tutte le iterazioni di sviluppo precedenti, documentate qui sotto come sub-entry `[0.2.0-dev.N]` (storiche, non corrispondono a tag git separati).
 
+## [0.7.0] — 2026-11-10
+
+### Changed
+
+- Interfaccia admin riorganizzata in **un'unica pagina a schede** (come wp-book-a-call): Attachment, Statistiche, Pagamenti (PayPal + default attachment), Paywall ed email (testi + visualizzazione gratuita), Avanzate, Aggiornamenti. Le impostazioni sono caricate una volta e condivise tra le schede: le modifiche non salvate restano passando da una scheda all'altra. Sezioni in card con titolo; scheda iniziale selezionabile con `?tab=`.
+- Il menu "Paid Attachments" non ha più sottomenu: le vecchie pagine `wp-paid-attachments-attachments` e `wp-paid-attachments-stats` sono confluite nelle schede.
+
+### Added
+
+- Scheda **Aggiornamenti**: versione installata, ultima release su GitHub, data dell'ultimo controllo, pulsante "Verifica aggiornamenti" e installazione della nuova versione dalla pagina. Nuovo `REST\UpdateController` (`GET /admin/update`, `POST /admin/update/check`, `POST /admin/update/install`, quest'ultimo con capability `update_plugins`); `Support\Updater` espone `status()` e `check()`.
+- Link "Impostazioni" nella riga del plugin, nell'elenco dei plugin.
+- Upload dei file Markdown (`.md`, `.markdown`) nella libreria media, con MIME `text/plain` (nuova classe `Support\UploadMimes`). Vale per tutto il sito, per chi ha la capability `upload_files`; la protezione a pagamento resta limitata alle immagini.
+
+### Removed
+
+- Classi `Admin\SettingsPage`, `Admin\AttachmentsListPage`, `Admin\StatsPage` (il caricamento degli asset è passato in `Admin\AdminMenu`).
+
 ## [0.6.0] — 2026-11-07
 
 ### Added

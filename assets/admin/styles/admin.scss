@@ -17,7 +17,6 @@
 
 // ─── Pagine ───────────────────────────────────────────────────────────────────
 
-.wppa-settings-page,
 .wppa-attachments-page,
 .wppa-stats-page {
 	max-width: 900px;
@@ -46,15 +45,107 @@
 	}
 }
 
-// ─── Tabs impostazioni ───────────────────────────────────────────────────────
+// ─── Pagina unica a schede ──────────────────────────────────────────────────
 
-.wppa-settings-tabs {
-	margin-top: var(--wppa-spacing);
+.wppa-admin {
+	max-width: 960px;
+	margin-top: 24px;
+	color: var(--wppa-color-text);
 
-	// Override stile tab WP per allinearle correttamente.
 	.components-tab-panel__tabs {
 		border-bottom: 1px solid var(--wppa-color-border);
-		margin-bottom: calc(var(--wppa-spacing) * 1.5);
+	}
+
+	.components-notice {
+		margin: 0 0 24px;
+	}
+
+	&__header {
+		margin-bottom: 24px;
+
+		h1 {
+			margin: 0 0 4px;
+			padding: 0;
+		}
+
+		p {
+			margin: 0;
+			color: var(--wppa-color-text-muted);
+		}
+	}
+
+	&__panel {
+		padding: 24px 0 8px;
+	}
+
+	&__card {
+		margin-bottom: 24px;
+		padding: 32px;
+		border: 1px solid #dcdcde;
+		border-radius: 8px;
+		background: #fff;
+
+		> :last-child {
+			margin-bottom: 0;
+		}
+	}
+
+	&__card-title {
+		margin: 0 0 4px;
+		padding: 0;
+		font-size: 1.1rem;
+	}
+
+	// Titolo senza descrizione: più spazio sotto, altrimenti tocca il contenuto.
+	&__card-title.is-bare {
+		margin-bottom: 24px;
+	}
+
+	&__card-desc {
+		margin: 0 0 32px;
+		color: var(--wppa-color-text-muted);
+	}
+
+	&__facts {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 16px;
+		margin: 0 0 24px;
+
+		@media (max-width: 782px) {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		dt {
+			color: var(--wppa-color-text-muted);
+		}
+
+		dd {
+			margin: 4px 0 0;
+			font-size: 1.1rem;
+			font-weight: 600;
+		}
+	}
+
+	&__badge {
+		margin-left: 8px;
+		padding: 2px 8px;
+		border-radius: 999px;
+		background: #edfaef;
+		color: var(--wppa-color-success);
+		font-size: 12px;
+		font-weight: 600;
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px;
+	}
+
+	&__hint {
+		margin: 16px 0 0;
+		color: var(--wppa-color-text-muted);
 	}
 }
 
@@ -80,12 +171,6 @@
 
 .wppa-settings-section-title {
 	margin: 0 0 .5rem;
-}
-
-// ─── Notice ───────────────────────────────────────────────────────────────────
-
-.wppa-settings-page .components-notice {
-	margin: var(--wppa-spacing) 0;
 }
 
 // ─── Stats ────────────────────────────────────────────────────────────────────

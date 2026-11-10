@@ -153,9 +153,8 @@ export default function StatsPage() {
 	const ov = data?.overview ?? {};
 
 	return (
-		<div className="wppa-stats-page wrap">
+		<div className="wppa-stats-page">
 			<div className="wppa-stats-header">
-				<h1 className="wp-heading-inline">{ 'Statistiche' }</h1>
 				<SelectControl
 					value={ String( range ) }
 					options={ [
@@ -164,7 +163,6 @@ export default function StatsPage() {
 						{ label: 'Ultimi 90 giorni', value: '90' },
 					] }
 					onChange={ ( v ) => setRange( parseInt( v, 10 ) ) }
-					style={ { marginLeft: '1rem' } }
 				/>
 			</div>
 
