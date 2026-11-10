@@ -322,6 +322,10 @@ final class AttachmentPageRenderer {
 		$api_root     = esc_attr( rest_url( 'wppa/v1' ) );
 		$nonce        = esc_attr( wp_create_nonce( 'wp_rest' ) );
 
+		// Per i file non immagine il widget mostra il nome del file al posto dell'anteprima.
+		$mime_type = (string) get_post_mime_type( $attachment_id );
+		$file_name = basename( (string) get_attached_file( $attachment_id ) );
+
 		return sprintf(
 			'<wppa-donation-widget
 				attachment-id="%d"
@@ -336,6 +340,8 @@ final class AttachmentPageRenderer {
 				paypal-donate-button-id="%s"
 				api-root="%s"
 				nonce="%s"
+				mime-type="%s"
+				file-name="%s"
 			></wppa-donation-widget>',
 			$attachment_id,
 			esc_attr( $thumbnail_url ),
@@ -348,7 +354,9 @@ final class AttachmentPageRenderer {
 			$paypal_client_id,
 			$paypal_donate_btn,
 			$api_root,
-			$nonce
+			$nonce,
+			esc_attr( $mime_type ),
+			esc_attr( $file_name )
 		);
 	}
 }

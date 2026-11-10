@@ -21,6 +21,7 @@ use WP_Error;
  *
  * Endpoints esposti:
  *   GET  /wppa/v1/admin/attachments
+ *   GET  /wppa/v1/admin/attachments/filters
  *   GET  /wppa/v1/admin/attachments/{id}/config
  *   POST /wppa/v1/admin/attachments/{id}/config
  */
@@ -86,7 +87,29 @@ final class AttachmentController extends RestController {
 						'default' => 'all',
 						'enum'    => array( 'all', 'protected', 'unprotected' ),
 					),
+					// Tipo MIME esatto (es. image/jpeg) o tipo principale (es. image).
+					'mime'     => array(
+						'type'              => 'string',
+						'default'           => '',
+						'validate_callback' => fn ( $value ) => '' === $value || in_array( $value, $this->get_mime_filter_values(), true ),
+					),
+					// Anno e mese di caricamento nel formato AAAAMM.
+					'month'    => array(
+						'type'    => 'string',
+						'default' => '',
+						'pattern' => '^(\d{6})?$',
+					),
 				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/admin/attachments/filters',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_filters' ),
+				'permission_callback' => array( $this, 'check_admin_permission' ),
 			)
 		);
 
@@ -123,7 +146,7 @@ final class AttachmentController extends RestController {
 	}
 
 	/**
-	 * GET /wppa/v1/admin/attachments — Lista attachment immagine paginata.
+	 * GET /wppa/v1/admin/attachments — Lista paginata di tutti gli attachment (ogni tipo di file).
 	 *
 	 * Il filtro `protected` / `unprotected` viene applicato direttamente nella
 	 * WP_Query tramite `post__in` / `post__not_in`, così paginazione e conteggi
@@ -137,6 +160,8 @@ final class AttachmentController extends RestController {
 		$page     = (int) $request->get_param( 'page' );
 		$search   = (string) $request->get_param( 'search' );
 		$filter   = (string) $request->get_param( 'filter' );
+		$mime     = (string) $request->get_param( 'mime' );
+		$month    = (string) $request->get_param( 'month' );
 
 		// Recupera gli ID protetti una volta sola quando serve il filtro.
 		if ( 'protected' === $filter || 'unprotected' === $filter ) {
@@ -153,7 +178,6 @@ final class AttachmentController extends RestController {
 
 		$query_args = array(
 			'post_type'      => 'attachment',
-			'post_mime_type' => 'image',
 			'post_status'    => 'inherit',
 			'posts_per_page' => $per_page,
 			'paged'          => $page,
@@ -163,6 +187,14 @@ final class AttachmentController extends RestController {
 
 		if ( ! empty( $search ) ) {
 			$query_args['s'] = $search;
+		}
+
+		if ( '' !== $mime ) {
+			$query_args['post_mime_type'] = $mime;
+		}
+
+		if ( '' !== $month ) {
+			$query_args['m'] = $month;
 		}
 
 		if ( 'protected' === $filter && ! empty( $protected_ids ) ) {
@@ -182,9 +214,9 @@ final class AttachmentController extends RestController {
 				'id'        => $post->ID,
 				'title'     => get_the_title( $post ),
 				'date'      => get_the_date( 'c', $post ),
-				'thumbnail' => wp_get_attachment_image_url( $post->ID, 'thumbnail' )
-					? wp_get_attachment_image_url( $post->ID, 'thumbnail' )
-					: '',
+				// Con $icon = true i file non immagine restituiscono l'icona del tipo di file.
+				'thumbnail' => (string) wp_get_attachment_image_url( $post->ID, 'thumbnail', true ),
+				'mime_type' => $post->post_mime_type,
 				'filename'  => basename( get_attached_file( $post->ID ) ? get_attached_file( $post->ID ) : '' ),
 				'link'      => get_attachment_link( $post->ID ),
 				'protected' => $enabled,
@@ -214,6 +246,75 @@ final class AttachmentController extends RestController {
 		$response->header( 'X-WP-TotalPages', (string) $query->max_num_pages );
 
 		return $response;
+	}
+
+	/**
+	 * GET /wppa/v1/admin/attachments/filters — Opzioni dei filtri per mese e per tipo.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function get_filters(): WP_REST_Response {
+		global $wpdb, $wp_locale;
+
+		// Stessa query della libreria media di WordPress (wp_enqueue_media()).
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT DISTINCT YEAR( post_date ) AS year, MONTH( post_date ) AS month
+				FROM {$wpdb->posts}
+				WHERE post_type = %s
+				ORDER BY year DESC, month DESC",
+				'attachment'
+			)
+		);
+
+		$months = array();
+		foreach ( $rows as $row ) {
+			$months[] = array(
+				'value' => sprintf( '%04d%02d', $row->year, $row->month ),
+				'label' => sprintf( '%s %d', $wp_locale->get_month( $row->month ), $row->year ),
+			);
+		}
+
+		$types = array();
+		foreach ( $this->get_mime_filter_values() as $value ) {
+			$types[] = array(
+				'value' => $value,
+				// I tipi principali (es. "image") filtrano tutti i sottotipi.
+				'label' => str_contains( $value, '/' ) ? $value : $value . '/* (tutti)',
+			);
+		}
+
+		return $this->success(
+			array(
+				'months' => $months,
+				'types'  => $types,
+			)
+		);
+	}
+
+	/**
+	 * Valori ammessi per il filtro tipo: i MIME presenti nella libreria e, per i tipi
+	 * principali con più sottotipi, il tipo principale da solo (es. "image").
+	 *
+	 * @return string[]
+	 */
+	private function get_mime_filter_values(): array {
+		$mimes = get_available_post_mime_types( 'attachment' );
+		sort( $mimes );
+
+		$majors = array_count_values( array_map( static fn ( string $m ) => strtok( $m, '/' ), $mimes ) );
+
+		$values = array();
+		foreach ( $mimes as $m ) {
+			$major = strtok( $m, '/' );
+			if ( $majors[ $major ] > 1 && ! in_array( $major, $values, true ) ) {
+				$values[] = $major;
+			}
+			$values[] = $m;
+		}
+
+		return $values;
 	}
 
 	/**

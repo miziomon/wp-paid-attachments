@@ -8,6 +8,17 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 > **Nota sulla cronologia delle versioni.**
 > I tag git pubblicati sono `v0.2.0` e `v0.3.0`. La release `v0.2.0` è la prima release pubblica del plugin e raccoglie tutte le iterazioni di sviluppo precedenti, documentate qui sotto come sub-entry `[0.2.0-dev.N]` (storiche, non corrispondono a tag git separati).
 
+## [0.8.0] — 2026-11-10
+
+### Changed
+
+- La scheda **Attachment** elenca tutti i tipi di file della libreria media, non più solo le immagini. Per i file non immagine l'anteprima è l'icona del tipo di file e sotto il nome compare il tipo MIME.
+- Paywall per i file non immagine: al posto dell'anteprima sfocata mostra il nome del file e, dopo lo sblocco, solo il pulsante "Scarica <nome file>" (nessuna `<img>`). Il widget riceve i nuovi attributi `mime-type` e `file-name`.
+
+### Added
+
+- Filtri **per mese** e **per tipo di file** nella scheda Attachment (parametri `month` in formato `AAAAMM` e `mime` di `GET /admin/attachments`). Le opzioni arrivano dal nuovo `GET /admin/attachments/filters`: i mesi in cui ci sono caricamenti e i tipi MIME presenti, più il tipo principale (es. `image/*`) quando ha più sottotipi.
+
 ## [0.7.0] — 2026-11-10
 
 ### Changed

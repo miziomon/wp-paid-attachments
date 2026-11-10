@@ -64,6 +64,15 @@ const TEMPLATE = `
     font-size: 2.5rem;
     line-height: 1;
   }
+  /* File non immagine: nome del file sotto il lucchetto, al posto dell'anteprima. */
+  .preview__overlay { flex-direction: column; gap: .75rem; }
+  .preview__name {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0 1rem;
+    word-break: break-all;
+  }
 
   .body {
     padding: 1.5rem;
@@ -225,6 +234,7 @@ const TEMPLATE = `
     <img class="preview__img" src="" alt="" />
     <div class="preview__overlay">
       <span class="preview__lock" aria-hidden="true">🔒</span>
+      <span class="preview__name" hidden></span>
     </div>
   </div>
   <div class="body">
@@ -293,6 +303,8 @@ class WppaDonationWidget extends HTMLElement {
 			'paypal-donate-button-id',
 			'api-root',
 			'nonce',
+			'mime-type',
+			'file-name',
 		];
 	}
 
@@ -334,16 +346,30 @@ class WppaDonationWidget extends HTMLElement {
 	get paypalDonateButtonId() { return this.getAttribute( 'paypal-donate-button-id' ) || ''; }
 	get apiRoot()            { return this.getAttribute( 'api-root' ) || ''; }
 	get nonce()              { return this.getAttribute( 'nonce' ) || ''; }
+	get fileName()           { return this.getAttribute( 'file-name' ) || ''; }
+	// Senza attributo (markup vecchio in cache) si assume un'immagine, come prima.
+	get isImage()            {
+		const mime = this.getAttribute( 'mime-type' ) || '';
+		return '' === mime || mime.startsWith( 'image/' );
+	}
 
 	/* ── Render Stato A ────────────────────────────────── */
 
 	_render() {
 		const sr = this.shadowRoot;
 
-		// Preview thumbnail (sfocata).
+		// Preview thumbnail (sfocata); per i file non immagine il nome del file.
 		const img = sr.querySelector( '.preview__img' );
-		img.src = this.thumbnail;
-		img.alt = this.title;
+		const name = sr.querySelector( '.preview__name' );
+		if ( this.isImage ) {
+			img.src = this.thumbnail;
+			img.alt = this.title;
+		} else {
+			// style e non l'attributo hidden: il CSS imposta display:block.
+			img.style.display = 'none';
+			name.textContent = this.fileName;
+			name.hidden = false;
+		}
 
 		// Titolo e testo.
 		sr.querySelector( '.body__title' ).textContent = this.paywallTitle;
@@ -484,11 +510,11 @@ class WppaDonationWidget extends HTMLElement {
 	_showUnlocked( viewToken, downloadToken, cookieToken ) {
 		const sr = this.shadowRoot;
 		const img = sr.querySelector( '.state-c .unlocked-img' );
-		img.src = `${ this.apiRoot }/download/${ viewToken }`;
-		img.alt = this.title;
+		this._showUnlockedImage( img, `${ this.apiRoot }/download/${ viewToken }` );
 
 		const btnDownload = sr.querySelector( '.state-c .btn-download' );
 		btnDownload.href = `${ this.apiRoot }/download/${ downloadToken }`;
+		this._setDownloadLabel( btnDownload );
 
 		if ( cookieToken ) {
 			this._setCookie( `wppa_unlock_${ this.attachmentId }`, cookieToken, 86400 );
@@ -496,6 +522,25 @@ class WppaDonationWidget extends HTMLElement {
 
 		this._goTo( 'C' );
 		this._dispatchUnlocked( 'code' );
+	}
+
+	/* ── Helper stati C/D: immagine o file generico ──── */
+
+	// I file non immagine non si possono mostrare in <img>: resta solo il pulsante di download.
+	_showUnlockedImage( img, src ) {
+		if ( this.isImage ) {
+			img.src = src;
+			img.alt = this.title;
+		} else {
+			// style e non l'attributo hidden: il CSS imposta display:block.
+			img.style.display = 'none';
+		}
+	}
+
+	_setDownloadLabel( btn ) {
+		if ( ! this.isImage ) {
+			btn.textContent = `⬇ Scarica ${ this.fileName || 'file' }`;
+		}
 	}
 
 	/* ── Free view (Stato D) ───────────────────────────── */
@@ -544,13 +589,13 @@ class WppaDonationWidget extends HTMLElement {
 	_showFreeView( viewToken, downloadToken ) {
 		const sr  = this.shadowRoot;
 		const img = sr.querySelector( '.state-d .unlocked-img' );
-		img.src = `${ this.apiRoot }/download/${ viewToken }?t=fv`;
-		img.alt = this.title;
+		this._showUnlockedImage( img, `${ this.apiRoot }/download/${ viewToken }?t=fv` );
 
 		if ( downloadToken ) {
 			const btnDownload = sr.querySelector( '.state-d .btn-download' );
 			if ( btnDownload ) {
 				btnDownload.href = `${ this.apiRoot }/download/${ downloadToken }`;
+				this._setDownloadLabel( btnDownload );
 			}
 		}
 

@@ -23,11 +23,21 @@ export default function AttachmentsPage() {
 	const [ page, setPage ]               = useState( 1 );
 	const [ totalPages, setTotalPages ]   = useState( 1 );
 	const [ editing, setEditing ]         = useState( null );
+	const [ month, setMonth ]             = useState( '' );
+	const [ mime, setMime ]               = useState( '' );
+	const [ filterOptions, setFilterOptions ] = useState( { months: [], types: [] } );
+
+	// Opzioni dei filtri mese e tipo: caricate una volta sola.
+	useEffect( () => {
+		apiFetch( { path: '/wppa/v1/admin/attachments/filters' } )
+			.then( setFilterOptions )
+			.catch( () => {} );
+	}, [] );
 
 	const load = useCallback( () => {
 		setIsLoading( true );
 		apiFetch( {
-			path: `/wppa/v1/admin/attachments?per_page=20&page=${ page }&search=${ encodeURIComponent( search ) }&filter=${ filter }`,
+			path: `/wppa/v1/admin/attachments?per_page=20&page=${ page }&search=${ encodeURIComponent( search ) }&filter=${ filter }&month=${ month }&mime=${ encodeURIComponent( mime ) }`,
 			parse: false,
 		} )
 			.then( async ( response ) => {
@@ -39,7 +49,7 @@ export default function AttachmentsPage() {
 				setNotice( { type: 'error', message: 'Errore nel caricamento degli attachment.' } )
 			)
 			.finally( () => setIsLoading( false ) );
-	}, [ page, search, filter ] );
+	}, [ page, search, filter, month, mime ] );
 
 	useEffect( () => {
 		const timer = setTimeout( load, search ? 400 : 0 );
@@ -83,6 +93,20 @@ export default function AttachmentsPage() {
 						value={ filter }
 						options={ FILTER_OPTIONS }
 						onChange={ ( v ) => { setFilter( v ); setPage( 1 ); } }
+					/>
+				</FlexItem>
+				<FlexItem>
+					<SelectControl
+						value={ month }
+						options={ [ { label: 'Tutte le date', value: '' }, ...filterOptions.months ] }
+						onChange={ ( v ) => { setMonth( v ); setPage( 1 ); } }
+					/>
+				</FlexItem>
+				<FlexItem>
+					<SelectControl
+						value={ mime }
+						options={ [ { label: 'Tutti i tipi', value: '' }, ...filterOptions.types ] }
+						onChange={ ( v ) => { setMime( v ); setPage( 1 ); } }
 					/>
 				</FlexItem>
 			</Flex>

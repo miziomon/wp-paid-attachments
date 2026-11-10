@@ -33,6 +33,9 @@ export default function AttachmentRow( { item, onEdit } ) {
 				{ item.filename && item.title !== item.filename && (
 					<span className="wppa-attachment-row__filename">{ item.filename }</span>
 				) }
+				{ item.mime_type && (
+					<span className="wppa-attachment-row__filename">{ item.mime_type }</span>
+				) }
 				<div className="wppa-row-actions">
 					<span>
 						<button
